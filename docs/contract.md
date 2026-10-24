@@ -1,10 +1,12 @@
 # clinicbench measurement contract
 
 Status: public contract v1, frozen with the scoring code (hashes in `docs/freeze.json`; this file's
-own hash in `docs/contract.sha256`). It states the rules the scorer applies. Layer2C Lab 029 ran
-under these rules; its working copy also held the history of how they were decided, which isn't
-part of the instrument. The scoring code files listed in `docs/freeze.json` are byte-identical to
-the ones that lab's runs were frozen with. Changes go in `docs/contract-changes.md` with their
+own hash in `docs/contract.sha256`). It states the rules the scorer applies. The scoring code files listed in `docs/freeze.json` are
+byte-identical to the ones Layer2C Lab 029's runs were frozen with, so sections 0 to 9 and 11 score
+exactly as that lab's runs did. Section 10 is different: Lab 029's frozen contract named a logistic
+model with a patient random effect as the primary estimate, plus a pilot, a combined pass and a
+fallback sensitivity, and none of them ran. Section 10 here was written after those runs to describe
+the raw-rate analysis that was actually implemented, and lists the frozen plan as not implemented. Changes go in `docs/contract-changes.md` with their
 reason, and the freeze is cut again.
 
 ## 0. Two tiers of metrics
