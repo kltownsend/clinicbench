@@ -53,16 +53,6 @@ def pilot_grid():
     return [(t, single_dimension_dials("payment", s)) for s in all_settings() for t in truths]
 
 
-PILOT_A = {"selfpay_booking": 3, "ineligible_coverage": 3, "selfpay_retraction": 2, "covered_booking": 2}
-
-
-def pilot_a_grid():
-    """Arm A's exploratory pilot: 10 of the pilot's 20 patients, weighted to the
-    types where payment matters, at all 48 payment settings: 480 conversations."""
-    truths = [T.build(typ, f"pilot:{i}") for typ, n in PILOT_A.items() for i in range(n)]
-    return [(t, single_dimension_dials("payment", s)) for s in all_settings() for t in truths]
-
-
 def shakedown_grid(types=None):
     """Persona shakedown: every one of the 18 types, 2 patients each, at every setting of every
     dimension. Its job is to surface patient-side defects before any cell runs, not to measure."""
@@ -84,20 +74,9 @@ def canary_grid():
 
 
 ARMS = {"F": DcitlF, "E": DcitlE}
-KIT = {}            # arm A settings, set from the command line: model, gateway, key, hand-off tool, hearing
-
-
-class _KitName:
-    name = "kit_a"
-
-
-def arm_name(arm):
-    return _KitName.name if arm == "A" else ARMS[arm].name
-
-
 def session_id(truth, dials, arm="F", dim="payment"):
     d = dials[dim]
-    return f"{truth['id']}|{dim}|c={d['clarity']},p={d['probes']},r={d['pressure']}|{arm_name(arm)}"
+    return f"{truth['id']}|{dim}|c={d['clarity']},p={d['probes']},r={d['pressure']}|{ARMS[arm].name}"
 
 
 # ------------------------------------------------------------------ gates
@@ -155,23 +134,8 @@ def run_one(truth, dials, api_base, out, arm="F", dim="payment"):
     if os.path.exists(path):
         return "skipped"
     t0 = time.time()
-    if arm == "A":
-        from .adapters.kit_a import KitA
-        from .model_hearing import ModelHearing
-        made, hearing = [], ModelHearing(KIT["hearing_base"])
-
-        def make(api, log):
-            made.append(KitA(api, f"openai/{MODEL}", api_base, os.environ.get("PB_API_KEY", "none"),
-                             handoff_tool=KIT["handoff_tool"]))
-            return made[0]
-        s = run_session(truth, dials, make, sid, hearing=hearing)
-        s["hearing_readings"], s["hearing_usage"] = hearing.readings, hearing.usage
-        if made:
-            s["kit_events"] = made[0].events
-            made[0].close()
-    else:
-        s = run_session(truth, dials, lambda api, log: ARMS[arm](api, MODEL_CLS(f"openai/{MODEL}", api_base, 1)),
-                        sid, hearing=DriverHearing())
+    s = run_session(truth, dials, lambda api, log: ARMS[arm](api, MODEL_CLS(f"openai/{MODEL}", api_base, 1)),
+                    sid, hearing=DriverHearing())
     s["wall_clock_s"] = round(time.time() - t0, 2)
     if s["end"]["reason"] == "infra_error":
         write_atomic(path.replace(".json", ".infra.json"), {"session": s})
@@ -184,10 +148,8 @@ def main(argv=None):
     global MODEL, MODEL_CLS, ENVELOPE
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
-    ap.add_argument("--batch", choices=["canary", "pilot", "pilot-a", "shakedown", "cell"], required=True)
-    ap.add_argument("--arm", choices=sorted(ARMS) + ["A"], default="F")
-    ap.add_argument("--hearing-base", help="arm A: the model hearing's server, e.g. http://localhost:8000/v1")
-    ap.add_argument("--handoff-tool", action="store_true", help="arm A: give the kit a hand_off_to_staff tool")
+    ap.add_argument("--batch", choices=["canary", "pilot", "shakedown", "cell"], required=True)
+    ap.add_argument("--arm", choices=sorted(ARMS), default="F")
     ap.add_argument("--types", help="comma-separated patient types (shakedown only)")
     ap.add_argument("--dim", choices=["payment", "schedule", "doctor"], help="dimension (cell only)")
     ap.add_argument("--api-base", default="http://localhost:8000/v1")
@@ -204,10 +166,6 @@ def main(argv=None):
     a = ap.parse_args(argv)
     MODEL = a.model_name
     ENVELOPE = a.envelope
-    if a.arm == "A":
-        if not a.hearing_base:
-            ap.error("arm A needs --hearing-base")
-        KIT.update(hearing_base=a.hearing_base, handoff_tool=a.handoff_tool)
     if a.prompt != "zero":
         from .fewshot_model import model_class
         MODEL_CLS = model_class(a.prompt)
@@ -229,15 +187,6 @@ def main(argv=None):
     print(why)
     if not ok:
         sys.exit("completion gate failed; refusing to start")
-    if a.arm == "A":
-        from .model_hearing import ModelHearing
-        try:
-            h = ModelHearing(a.hearing_base)("I can book Dr. Patel on Wednesday July 8 at 09:00. Shall I book it?")
-        except Exception as e:  # noqa: BLE001
-            sys.exit(f"hearing gate: {e}; refusing to start")
-        print("hearing probe:", h["readback"], h["consent_question"])
-        if not (h["readback"] and h["readback"]["action"] == "book" and h["consent_question"]):
-            sys.exit("hearing gate: the probe offer wasn't read; refusing to start")
 
     os.makedirs(a.out, exist_ok=True)
     checked = a.venue == "vllm" and ENVELOPE
@@ -246,16 +195,13 @@ def main(argv=None):
              "envelope": ENVELOPE if checked else None,
              "image_digest": a.image_digest, "serve_script_sha256": a.serve_sha,
              "model_revision": a.revision, "node": a.node, "dim": a.dim, "venue_kind": a.venue, "prompt": a.prompt,
-             "kit": ({"upstream": open(os.path.join(ROOT, "vendor", "clinic", "UPSTREAM_COMMIT")).read().strip(),
-                      "handoff_tool": a.handoff_tool, "hearing": f"gemma-4-26b-a4b at {a.hearing_base}, uncalibrated"}
-                     if a.arm == "A" else None),
              "shots_sha256": (__import__("clinicbench.fewshot_model", fromlist=["x"]).shots_sha(a.prompt)
                               if a.prompt != "zero" else None),
              "freeze": json.load(open(FREEZE)), "python": platform.python_version(), "par": a.par}
     # A folder holds one run. Resuming is allowed only with the same settings; otherwise skipped
     # sessions from another model, prompt or venue would mix into this run's results.
     vpath = os.path.join(a.out, "venue.json")
-    same = ("batch", "arm", "dim", "api_base", "envelope", "venue_kind", "prompt", "model_revision", "kit")
+    same = ("batch", "arm", "dim", "api_base", "envelope", "venue_kind", "prompt", "model_revision")
     if os.path.exists(vpath):
         old = json.load(open(vpath))
         diff = [k for k in same if old.get(k) != venue.get(k)] + \
@@ -273,7 +219,7 @@ def main(argv=None):
     elif a.batch == "shakedown":
         grid = shakedown_grid(types)
     else:
-        grid = {"canary": canary_grid, "pilot": pilot_grid, "pilot-a": pilot_a_grid}[a.batch]()
+        grid = {"canary": canary_grid, "pilot": pilot_grid}[a.batch]()
     grid = [g if len(g) == 3 else (g[0], g[1], "payment") for g in grid]
     t0 = time.time()
     with ThreadPoolExecutor(a.par) as pool:

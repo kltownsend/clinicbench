@@ -194,12 +194,12 @@ appointments disclosed. Logged as a transition record:
 Hearing decides the patient's next act, so it shapes the path. It never edits the truth, the
 acceptable set or a past disclosure.
 
-Two implementations: a deterministic parser for a clinician that speaks in fixed templates, exact
-for those templates; and a model extractor for a free-form clinician, which answers a closed form
-whose values must be the bench's own slot, doctor and appointment ids and drops any that aren't.
-A model extractor counts as calibrated only when its wrong-value rate on offers and read-backs is
-at or under 2%, with the upper 95% bound at or under 5%, on a labeled calibration set. Until then,
-results that use it are exploratory.
+This release implements a deterministic parser for a clinician that speaks in fixed templates,
+exact for those templates. A free-form clinician needs a model extractor, which must answer a closed
+form whose values are the bench's own slot, doctor and appointment ids, and must count as calibrated
+before its results are more than exploratory: a wrong-value rate on offers and read-backs at or under
+2%, with the upper 95% bound at or under 5%, on a labeled calibration set. No model extractor ships
+in this release.
 
 ## 9. Adapter contract
 

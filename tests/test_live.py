@@ -147,9 +147,3 @@ def test_why_wrong_flags_a_change_of_mind():
     score = {"tier1": {"writes": [{"outcome": "wrong", "turn": 4,
                                    "component": {"action": "book", "patient": "P3", "slot": "S10", "basis": "covered"}}]}}
     assert "changed their mind" in why_wrong({"truth": truth}, score)
-
-
-def test_pilot_a_grid_is_480_on_ten_pilot_patients():
-    g = live.pilot_a_grid()
-    assert len(g) == 480 and len({x[0]["id"] for x in g}) == 10
-    assert {x[0]["id"] for x in g} <= {x[0]["id"] for x in live.pilot_grid()}

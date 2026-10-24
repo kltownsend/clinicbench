@@ -9,4 +9,3 @@ gateway/.venv/
 gateway/.master
 gateway/*.log
 gateway/catcher.out
-.venv-kit/

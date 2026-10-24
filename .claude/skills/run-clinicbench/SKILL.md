@@ -84,9 +84,9 @@ don't control. Hosted models usually have no seed, so repeat runs can differ sli
 key. Stop it only after the runner has finished or been stopped, never by killing requests in
 flight.
 
-## 8. Arm A and the model hearing
+## 8. Agents that write their own replies
 
-Arm A (the agent kit, where the model runs the workflow) and any agent that writes its own replies
-need `--hearing-base` and the model hearing, which isn't calibrated. Label those results
-exploratory. Before trusting them, sample the hearing's readings (`scripts/hearing_audit.py`) and
-have a person mark each one right or wrong.
+The template parser hears only an agent that speaks in fixed templates. An agent that writes its
+own sentences needs a model hearing, which isn't in this release. Don't improvise one: a misread
+offer changes the patient's next move and so the score, and an uncalibrated hearing makes results
+exploratory at best.

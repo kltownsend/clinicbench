@@ -17,19 +17,19 @@ so you can run it on your own stack and reach your own conclusions.
   contradicting themselves, or not at all), how many questions it takes, and whether they push.
   Code decides each patient act and logs what was disclosed and how clearly. The patient's words
   come from templates (`clinicbench/voice.py`).
-- **The patient hears the agent.** For an agent that speaks in fixed templates, a deterministic
-  parser does it (`clinicbench/hearing.py`). For one that writes its own sentences, a model reads each
-  reply as a closed form over the bench's slot and doctor catalog (`clinicbench/model_hearing.py`).
+- **The patient hears the agent** through a deterministic parser (`clinicbench/hearing.py`), which
+  reads an agent that speaks in fixed templates. An agent that writes its own sentences needs a model
+  to hear it; that isn't in this release (see Implementation status).
 - **The agent plugs in through an adapter** and acts only through the clinic's tools
   (`clinicbench/store.py`), which log every call before it runs.
 - **The scorer** (`clinicbench/scorer.py`) compares every write in a recorded conversation to the
   patient's truth at that turn. A booking made while something it depends on was still unclear counts
   as booked too soon.
 
-What's deterministic and what isn't: scoring is code over a recorded conversation, so the same record
-always scores the same way. With the template parser, the whole conversation is code except the agent
-under test. With the model hearing, a model decides what the patient understood, which changes the
-patient's next move and so the conversation's path; those runs inherit the hearing's error.
+What's deterministic: scoring is code over a recorded conversation, so the same record always
+scores the same way, and with the template parser the whole conversation is code except the agent
+under test. A model hearing for free-form agents would decide what the patient understood, and so the
+conversation's path; that's why it has to be calibrated before it ships.
 
 ## Implementation status
 
@@ -39,7 +39,7 @@ The measurement contract (`docs/contract.md`) describes more than this release i
 |---|---|
 | Truth, disclosure log, dependencies, outcomes, storms (sections 1 to 6) | Implemented |
 | Patient voice written by a model, with a fidelity check (section 7) | **Not implemented.** The patient speaks in templates only. |
-| Hearing (section 8) | Template parser implemented. Model hearing implemented but **not calibrated** against section 11's error gate; no calibration set ships. |
+| Hearing (section 8) | Template parser implemented. Hearing for a free-form agent is **not in this release**: it ships once it passes the calibration gate in section 8. |
 | Analysis (section 10) | Rates per setting with 95% intervals from a bootstrap over patients (`cells.py`). The contract's logistic model with a patient random effect, and the combined pass, are **not implemented**. |
 | Numeric gates (section 11) | The runner enforces the self-test, freeze, envelope, completion and infrastructure gates. Fidelity and hearing gates have nothing to check yet. |
 
@@ -52,7 +52,6 @@ The measurement contract (`docs/contract.md`) describes more than this release i
 | Tools, session loop, scorer | `store.py`, `session.py`, `scorer.py` |
 | Plain-language reasons for a wrong booking | `explain.py` |
 | Adapters: a code-driven driver with two consent rules (F, E) | `adapters/dcitl_port.py`, `dcitl_f.py` |
-| Adapter, experimental: a port of an agent kit where the model runs the workflow (A) | `adapters/kit_a.py`, `kit_services.py`, `vendor/clinic` |
 | Few-shot reader prompt | `fewshot_model.py`, `fewshot/` |
 | Runner with gates; cell summarizer | `live.py`, `cells.py`, `scripts/summarize.py` |
 | Self-test: golden cases, mutations, stub grid | `clinicbench/selftest/` |
@@ -128,15 +127,6 @@ The runner sends `PB_API_KEY` to whatever `--api-base` you give it; point it onl
 server you run. The gateway configs retry failed calls three times; those retries don't show in the
 bench's infrastructure count.
 
-### Arm A (experimental)
-
-Arm A ports an agent kit (Google's Agent Development Kit, three agents built from the kit's own
-contracts) onto the bench, with the model deciding every step and writing every reply. It needs a
-separate environment (`google-adk==2.12.0`, `google-genai==2.31.0`, `litellm==1.106.0`, `mcp==2.3.0`,
-`pytest`), `--arm A`, and `--hearing-base` pointing at a server for the model hearing. Its hearing
-isn't calibrated, so treat arm A results as exploratory. `--handoff-tool` adds a hand-off tool the kit
-doesn't ship with; that's a modified arm.
-
 ## For coding agents
 
 `.claude/skills/run-clinicbench/SKILL.md` is the run order as a skill: check the instrument, canary
@@ -149,8 +139,8 @@ An adapter gets the clinic's tools and nothing else: not the patient's truth, th
 disclosure log. It takes one patient line and returns one reply, and it hands the patient to a
 person by calling the hand-off tool. Contract section 9 lists what an adapter must meet. Write
 yours next to `adapters/dcitl_f.py`, add it to `ARMS` in `live.py`, and run the self-test's
-adapter checks against stub models first. An agent that writes its own replies needs the model
-hearing, with the caveat above.
+adapter checks against stub models first. An agent that writes its own replies needs a model
+hearing, which isn't in this release.
 
 ## Change the instrument
 
@@ -161,8 +151,6 @@ Results compare only between runs with the same freeze.
 ## Credits and licenses
 
 - clinicbench: MIT (`LICENSE`), except the third-party material listed in `THIRD_PARTY_NOTICES.md`.
-- `vendor/clinic`: the Promise-Driven Agentic Kit's clinic example by Jeremy Schulman, Apache 2.0,
-  copied unmodified, license kept. `adapters/kit_services.py` adapts its service checks and wording.
 - The code-driven driver is from Layer2C Lab 23. The few-shot examples are from Layer2C Lab 024's
   corpus; their patient wording was written by a language model.
 - Built with Claude Code, an Anthropic tool, under the author's design rulings.

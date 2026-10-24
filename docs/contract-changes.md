@@ -6,4 +6,5 @@ to any frozen file, is logged here first with its reason, then the freeze is cut
 
 ## Public v1
 
-The rules as Layer2C Lab 029 ran them. No changes since.
+The rules as Layer2C Lab 029 ran them. Section 8 says plainly that no model hearing ships in this
+release; no rule changed.
