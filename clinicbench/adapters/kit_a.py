@@ -1,18 +1,21 @@
-"""Arm A adapter: Lab 23's agent kit as shipped, with the model running the workflow.
+"""Arm A adapter: Lab 23's agent kit, ported onto the bench, with the model running the workflow.
 
 The kit (vendor/clinic, Apache 2.0, upstream commit in vendor/clinic/UPSTREAM_COMMIT) is three
 Google ADK agents built from its own XML contracts: an orchestrator that verifies the caller and
 routes, and booking and manage-appointment agents. The model decides every step, and the kit's
-writes trust the yes/no flags it passes in (`confirmed`, `eligibility_ok`). This adapter builds
-those agents unchanged, gives each conversation its own copy of the kit's tool functions (same
-code, signatures and docstrings) bound to that conversation's bench store, and drives the agent
-one patient line at a time. It never sees the truth, the dials or the disclosure log.
+writes trust the yes/no flags it passes in (`confirmed`, `eligibility_ok`).
+
+This is a compatibility port, not the kit's application run unchanged. The agents are built from the
+kit's unmodified contracts and its own contract parser, with the kit's tool functions (same code,
+signatures and docstrings) re-created per conversation so they act on that conversation's bench
+store. The kit's services are re-implemented over the bench's tools (kit_services.py), keeping the
+kit's checks and wording. Session handling, retries and the per-turn call cap follow Lab 23's runner.
 
 The kit has no hand-off path. With `handoff_tool=True` the adapter adds one tool,
-`hand_off_to_staff`, to every agent; its contracts are unchanged, so the tool's docstring is all
-the model is told about it. Without it, the kit runs exactly as shipped.
+`hand_off_to_staff`, to every agent; the contracts don't mention it, so the tool's docstring is all
+the model is told about it. That variant is a modified arm, reported separately.
 
-Runs in the kit environment (.venv-kit: google-adk 2.12.0, litellm 1.106.0, Lab 23's versions).
+Runs in the kit environment (google-adk 2.12.0, google-genai 2.31.0, litellm 1.106.0, mcp 2.3.0).
 """
 
 from __future__ import annotations

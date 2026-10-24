@@ -1,4 +1,9 @@
-"""The kit's services (clinic.services), as shipped, over the bench's tool API.
+# Portions of this file (the checks in commit_booking, cancel_booking and reschedule_booking, and the
+# wording of their results and refusals) are adapted from the Promise-Driven Agentic Kit,
+# vendor/clinic/src/clinic/services, Copyright Jeremy Schulman, licensed under the Apache License 2.0
+# (vendor/clinic/LICENSE). Modified: the checks run over clinicbench's store and tools instead of the
+# kit's in-memory store. The rest of this file is clinicbench's, under its MIT license.
+"""The kit's services (clinic.services), re-implemented over the bench's tool API.
 
 Arm A runs Lab 23's agent kit unchanged: its contracts, its agents and its tool functions. Those
 tools call `services.registry`, `services.eligibility`, `services.schedule` and read

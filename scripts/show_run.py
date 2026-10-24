@@ -58,10 +58,12 @@ def main(run_dir, path, per_level=0):
     files = sorted(f for f in glob.glob(os.path.join(run_dir, "*.json"))
                    if not f.endswith(("venue.json", "summary.json")) and ".infra" not in f)
     venue = json.load(open(os.path.join(run_dir, "venue.json")))
-    out = [f"# {os.path.basename(run_dir)}: Gemma against the code-driven patient", "",
-           f"Run {venue['started_utc']} on node 2, {venue['models']['data'][0]['id']} at max_model_len "
-           f"{venue['models']['data'][0]['max_model_len']}, image {venue['image_digest'][:19]}..., "
-           f"freeze {venue['freeze']['frozen_at']}. Template voice, deterministic hearing.", "",
+    m = venue.get("models") or {}
+    model = (m.get("data") or [{}])[0].get("id") or m.get("model") or "unknown model"
+    out = [f"# {os.path.basename(run_dir)}: {model} against the code-driven patient", "",
+           f"Run {venue['started_utc']} on {venue.get('node') or 'an unrecorded node'}, {model}, "
+           f"arm {venue.get('arm', 'F')}, envelope {venue.get('envelope')}, "
+           f"freeze {venue['freeze']['frozen_at']}. Template voice.", "",
            "Under each patient line, in code font: the act and disclosure code decided before the voice spoke "
            "(`+` affirmed, `-` excluded, `CANT` can't settle it). Under each clinic line: what the driver asked "
            "Gemma, and the tools it called.", ""]

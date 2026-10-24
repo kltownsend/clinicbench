@@ -6,7 +6,8 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        hdr = {k: ("<redacted>" if k.lower() in ("x-api-key", "authorization") else v) for k, v in self.headers.items()}
+        safe = ("content-type", "content-length", "anthropic-version", "anthropic-beta", "user-agent", "accept")
+        hdr = {k: (v if k.lower() in safe else "<redacted>") for k, v in self.headers.items()}
         print(json.dumps({"path": self.path, "headers": hdr, "body": body}, indent=1), flush=True)
         out = {"id": "msg_x", "type": "message", "role": "assistant", "model": body.get("model"),
                "content": [{"type": "text", "text": '{"answer": "yes"}'}], "stop_reason": "end_turn",

@@ -108,10 +108,16 @@ class ModelHearing:
             x["slot_options"] = [(int(W.SLOT[s][2][8:10]), W.SLOT[s][2][11:16]) for s in opts]
             if opts and "slot" not in x["questions"]:
                 x["questions"].append("slot")
+            c = j.get("cost_stated")
+            x["cost_stated"] = int(c) if isinstance(c, (int, float)) and c > 0 else None
             p = j.get("proposal")
             if isinstance(p, dict) and p.get("action") in ("book", "cancel", "move"):
                 slot = p.get("slot") if p.get("slot") in W.SLOT else None
-                appt = p.get("appt") if re.fullmatch(r"A\d+", str(p.get("appt") or "")) else None
+                # The clinic's existing appointments, or one the bench store created in this call (A101 on).
+                aid = str(p.get("appt") or "")
+                appt = aid if aid in W.APPT or (re.fullmatch(r"A\d+", aid) and int(aid[1:]) > 100) else None
+                if p.get("appt") and appt is None:
+                    dropped.append(aid)
                 if p.get("slot") and slot is None:
                     dropped.append(p.get("slot"))
                 ok = (p["action"] == "book" and slot) or (p["action"] == "cancel" and appt) or \
@@ -119,12 +125,10 @@ class ModelHearing:
                 if ok:
                     x["readback"] = {"action": p["action"], "slot": slot, "appt": appt,
                                      "doctor": W.doctor_of_slot(slot) if slot else None,
-                                     "basis": "self_pay" if p.get("self_pay") else "covered", "cost": None}
+                                     "basis": "self_pay" if p.get("self_pay") else "covered", "cost": x["cost_stated"]}
                     x["consent_question"] = bool(j.get("asks_confirmation"))
                 else:
                     dropped.append("proposal")
-            c = j.get("cost_stated")
-            x["cost_stated"] = int(c) if isinstance(c, (int, float)) and c > 0 else None
             ca = j.get("coverage_answer")
             x["coverage_answer"] = True if ca == "covered" else False if ca == "not_covered" else None
             x["handoff_stated"] = bool(j.get("handoff_stated"))

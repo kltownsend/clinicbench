@@ -18,7 +18,7 @@ import sys
 from clinicbench import cells as C
 
 ENVELOPE = {"model": "gemma-4-26b-a4b", "weights": "google/gemma-4-26B-A4B-it@20da991a",
-            "max_model_len": 262144, "serve": "serve_gemma26b_pinned.sh@95c342a5"}
+            "max_model_len": 262144, "serve": "serve/serve_gemma26b.sh"}
 BASE = {"reader": "gemma-off", "voice": "template", "hearing": "parser", "patients": "lab23-18"}
 INDEX = "results/cells/index.json"
 

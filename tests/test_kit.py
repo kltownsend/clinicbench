@@ -45,7 +45,7 @@ def test_model_hearing_validates_against_the_clinic():
     x = h("anything")
     assert x["questions"] == ["slot"] and len(x["slot_options"]) == 1
     assert x["readback"]["slot"] == slot and x["readback"]["basis"] == "self_pay" and x["consent_question"]
-    assert x["cost_stated"] == 250 and x["coverage_answer"] is False
+    assert x["cost_stated"] == 250 and x["readback"]["cost"] == 250 and x["coverage_answer"] is False
     assert h.readings[-1]["dropped"] == ["S999"]
     h._ask = lambda text: "not json"
     assert h("x")["readback"] is None and h.readings[-1]["parsed"] is False
@@ -61,3 +61,16 @@ def test_bound_tools_share_this_conversations_active_patient():
     tools["verify_patient"](member_id=W.PATIENTS[0][3])
     r = tools["check_eligibility"]("dermatology")
     assert r["ok"] and api.trace[-1]["tool"] == "check_coverage"
+
+
+def test_model_hearing_drops_unknown_appointments():
+    from clinicbench.model_hearing import ModelHearing
+    h = ModelHearing("http://unused/v1")
+    slot = W.open_slots()[0]
+    h._ask = lambda text: ('{"asks": [], "slot_options": [], "proposal": {"action": "move", "slot": "%s", '
+                           '"appt": "A07x", "self_pay": false}, "asks_confirmation": true}' % slot)
+    assert h("x")["readback"] is None and "A07x" in h.readings[-1]["dropped"]
+    known = next(iter(W.APPT))
+    h._ask = lambda text: ('{"proposal": {"action": "move", "slot": "%s", "appt": "%s"}, "asks_confirmation": true}'
+                           % (slot, known))
+    assert h("x")["readback"]["appt"] == known

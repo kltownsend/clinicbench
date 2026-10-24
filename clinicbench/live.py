@@ -118,7 +118,7 @@ def _get(url):
 def envelope_ok(api_base, venue="vllm"):
     if venue in ("forge", "gateway"):
         # A managed endpoint publishes no envelope to check; the completion gate is the check.
-        return True, "managed service, no envelope to check", {"venue": "forge", "model": MODEL}
+        return True, "managed service, no envelope to check", {"venue": venue, "model": MODEL}
     if venue == "llamacpp":
         # llama-server reports no max_model_len; the context per slot is recorded from /props.
         try:
@@ -133,7 +133,7 @@ def envelope_ok(api_base, venue="vllm"):
     except Exception as e:  # noqa: BLE001
         return False, f"no server at {api_base}: {e}", None
     d = (m.get("data") or [{}])[0]
-    if d.get("id") != MODEL or d.get("max_model_len") != ENVELOPE:
+    if d.get("id") != MODEL or (ENVELOPE and d.get("max_model_len") != ENVELOPE):
         return False, f"server reports {d.get('id')} max_model_len={d.get('max_model_len')}, want {MODEL} {ENVELOPE}", m
     return True, "ok", m
 
@@ -181,7 +181,7 @@ def run_one(truth, dials, api_base, out, arm="F", dim="payment"):
 
 
 def main(argv=None):
-    global MODEL, MODEL_CLS
+    global MODEL, MODEL_CLS, ENVELOPE
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument("--batch", choices=["canary", "pilot", "pilot-a", "shakedown", "cell"], required=True)
@@ -198,9 +198,12 @@ def main(argv=None):
     ap.add_argument("--node", default="not recorded")
     ap.add_argument("--venue", choices=["vllm", "llamacpp", "forge", "gateway"], default="vllm", help="server kind, for the envelope gate")
     ap.add_argument("--model-name", default=MODEL, help="model name the server answers to")
+    ap.add_argument("--envelope", type=int, default=ENVELOPE,
+                    help="the context length the vLLM server must report (0: don't check); recorded with the run")
     ap.add_argument("--prompt", choices=["zero", "fewshot-cb1"], default="zero", help="reader prompt")
     a = ap.parse_args(argv)
     MODEL = a.model_name
+    ENVELOPE = a.envelope
     if a.arm == "A":
         if not a.hearing_base:
             ap.error("arm A needs --hearing-base")
@@ -237,8 +240,10 @@ def main(argv=None):
             sys.exit("hearing gate: the probe offer wasn't read; refusing to start")
 
     os.makedirs(a.out, exist_ok=True)
+    checked = a.venue == "vllm" and ENVELOPE
     venue = {"started_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-             "batch": a.batch, "arm": a.arm, "api_base": a.api_base, "models": models, "envelope": ENVELOPE,
+             "batch": a.batch, "arm": a.arm, "api_base": a.api_base, "models": models,
+             "envelope": ENVELOPE if checked else None,
              "image_digest": a.image_digest, "serve_script_sha256": a.serve_sha,
              "model_revision": a.revision, "node": a.node, "dim": a.dim, "venue_kind": a.venue, "prompt": a.prompt,
              "kit": ({"upstream": open(os.path.join(ROOT, "vendor", "clinic", "UPSTREAM_COMMIT")).read().strip(),
@@ -247,7 +252,20 @@ def main(argv=None):
              "shots_sha256": (__import__("clinicbench.fewshot_model", fromlist=["x"]).shots_sha(a.prompt)
                               if a.prompt != "zero" else None),
              "freeze": json.load(open(FREEZE)), "python": platform.python_version(), "par": a.par}
-    write_atomic(os.path.join(a.out, "venue.json"), venue)
+    # A folder holds one run. Resuming is allowed only with the same settings; otherwise skipped
+    # sessions from another model, prompt or venue would mix into this run's results.
+    vpath = os.path.join(a.out, "venue.json")
+    same = ("batch", "arm", "dim", "api_base", "envelope", "venue_kind", "prompt", "model_revision", "kit")
+    if os.path.exists(vpath):
+        old = json.load(open(vpath))
+        diff = [k for k in same if old.get(k) != venue.get(k)] + \
+               (["model"] if (old.get("models") or {}).get("model", MODEL) != (venue["models"] or {}).get("model", MODEL)
+                and a.venue in ("forge", "gateway") else []) + \
+               (["freeze"] if old.get("freeze", {}).get("files") != venue["freeze"].get("files") else [])
+        if diff:
+            sys.exit(f"{a.out} already holds a run with different settings ({', '.join(diff)}); use a new folder")
+        venue["started_utc"] = old.get("started_utc", venue["started_utc"])
+    write_atomic(vpath, venue)
 
     types = a.types.split(",") if a.types else None
     if a.batch == "cell":
