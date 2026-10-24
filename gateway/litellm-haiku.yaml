@@ -1,0 +1,16 @@
+# clinicbench reader swap: Claude Haiku 5.5 behind LiteLLM, for the frozen OpenAI-format driver.
+# Thinking off, to match the Gemma reference cell's reasoning-off reader. drop_params drops what
+# Anthropic doesn't take (the driver's seed). The key comes from the environment
+# (ANTHROPIC_API_KEY); CB_ANTHROPIC_BASE is https://api.anthropic.com.
+model_list:
+  - model_name: claude-haiku-5-5
+    litellm_params:
+      model: anthropic/claude-haiku-5-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+      api_base: os.environ/CB_ANTHROPIC_BASE
+      thinking: {type: disabled}
+      extra_headers:
+        anthropic-workspace-id: YOUR_WORKSPACE_ID   # only for an organization-scoped key; delete this header otherwise
+litellm_settings:
+  drop_params: true
+  num_retries: 3

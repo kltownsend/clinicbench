@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Insurance Eligibility — non-LLM service agent (no FizzBee block).
+
+  Returns a point-in-time coverage verdict for a service under a patient's plan.
+  A textbook honest promiser: it declares in its own promise body that the
+  verdict is non-authoritative (point-in-time, not a guarantee of payment), so
+  the booking agent conditions its use on an explicit patient decision.
+-->
+<agent-manifest agent="insurance_eligibility" version="1.0">
+
+  <description>
+    Deterministic eligibility service: given a patient's plan and a requested
+    service, returns eligible / not-eligible with a reason and an estimated
+    self-pay cost. Point-in-time only; it does not book anything.
+  </description>
+
+  <promises>
+    <offer id="eligibility_check" type="workflow" to="book_appointment clinic_orchestrator">
+      <body>A coverage verdict {eligible, reason, estimatedSelfPay} for a service
+        under the patient's plan.</body>
+      <condition ref="patient_has_plan" assessed="self"/>
+    </offer>
+
+    <offer id="non_authoritative" type="invariant" to="book_appointment patient">
+      <body>The verdict is point-in-time and is not a guarantee of payment; the
+        booking agent must have the patient acknowledge a not-covered result
+        before proceeding self-pay.</body>
+    </offer>
+
+    <use id="active_patient" from="patient_registry">
+      <body>Reads the verified patient's plan id to evaluate coverage.</body>
+    </use>
+  </promises>
+
+</agent-manifest>
