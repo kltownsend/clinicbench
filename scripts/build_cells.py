@@ -3,7 +3,7 @@ cell index. F and E on the same dimension keep every patient-and-setting where t
 differently as transcripts, so the explorer can show the same conversation both ways.
 
 The node isn't part of the envelope: a parity check found the two
-Sparks gave identical transcripts on the pinned script. Each cell's venue still records it.
+nodes gave identical transcripts on the same serving recipe. Each cell's venue still records it.
 
 usage: PYTHONPATH=. .venv/bin/python scripts/build_cells.py payment [schedule doctor]
 """

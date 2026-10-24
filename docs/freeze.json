@@ -1,8 +1,8 @@
 {
- "frozen_at": "2026-10-22T23:53:03+00:00",
+ "frozen_at": "2026-10-24T22:02:18+00:00",
  "files": {
-  "docs/contract.md": "02c90977ac08e8b59472621cc38a63bc00c53dcdd97015ec60a5d0751ab73253",
-  "docs/contract-changes.md": "d1885b90293b459b132d21eca0b739adab80f867fa236c635b133d6e52bc24cd",
+  "docs/contract.md": "b84e3856329e8a8701134d5c4a1202f40d520e03a231b0cc87e4a3106d204b3d",
+  "docs/contract-changes.md": "a66b9063453d9ac3c97721e1bf0b5eb60b527d56c490f5c1c0fa2a1f8742a77e",
   "clinicbench/world.py": "b990c900fa5de6cff8dfde3650f41d582eacb69b0eaa6d3b49da10f3722e9013",
   "clinicbench/records.py": "775237126119620950e81739ef697088a500bdc0be3213aee847551749900f08",
   "clinicbench/truth.py": "1730b092c22b8d319065b6253c7cc67fd33da437a89f1058340711c24c5c6178",

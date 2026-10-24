@@ -16,7 +16,7 @@ trusted. This is the order to work in.
 PYTHONPATH=. .venv/bin/python -m clinicbench.selftest
 ```
 
-Both must pass. Don't edit anything listed in `docs/phase3-freeze.json` (the contract, the
+Both must pass. Don't edit anything listed in `docs/freeze.json` (the contract, the
 scorer, the patient and the driver files) to make a run work. If the instrument must change,
 write the change and its reason in `docs/contract-changes.md`, refreeze with
 `scripts/freeze.py`, and say plainly that results from before and after don't compare.

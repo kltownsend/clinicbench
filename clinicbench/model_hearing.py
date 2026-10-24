@@ -1,11 +1,11 @@
 """Model hearing for a free-form clinician (exploratory; not calibrated to the contract's gate).
 
 The deterministic parser (hearing.py) reads only the DCITL driver's templates. A free-form agent,
-like the kit in arm A, needs a model to read its replies. This one asks Gemma 4 26B (on a Spark,
+like the kit in arm A, needs a model to read its replies. This one asks a model (the reference uses Gemma 4 26B,
 reasoning off, temperature 0) one closed question per reply: a JSON form whose answers are drawn from the clinic's
 own slot, doctor and appointment ids, then checks each answer against the clinic's records and
 drops what doesn't validate. It fills the same labels as the parser (contract section 8), so the
-patient policy is unchanged. Every reading is kept for Keith's audit.
+patient policy is unchanged. Every reading is kept for a person's audit.
 
 Contract status: section 9 requires hearing wrong-value at or under 2% on a calibration set. This
 extractor hasn't been calibrated; results that use it are labeled uncalibrated and exploratory.

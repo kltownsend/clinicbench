@@ -56,7 +56,7 @@ The measurement contract (`docs/contract.md`) describes more than this release i
 | Few-shot reader prompt | `fewshot_model.py`, `fewshot/` |
 | Runner with gates; cell summarizer | `live.py`, `cells.py`, `scripts/summarize.py` |
 | Self-test: golden cases, mutations, stub grid | `clinicbench/selftest/` |
-| The measurement contract, frozen by hash | `docs/contract.md`, `docs/contract-changes.md`, `docs/phase3-freeze.json` |
+| The measurement contract, frozen by hash | `docs/contract.md`, `docs/contract-changes.md`, `docs/freeze.json` |
 | Serving and gateway configs | `serve/`, `gateway/` |
 
 The world is a small clinic: 8 patient identities, 6 doctors, 42 slots. The 1,000 patients are

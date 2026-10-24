@@ -2,7 +2,7 @@
 
 Gates, in order, before any session runs:
 1. the self-test passes (golden, mutation, stub grid, adapter with stub models);
-2. the frozen files match docs/phase3-freeze.json (any change after the freeze is logged first);
+2. the frozen files match docs/freeze.json (any change after the freeze is logged first);
 3. the server is the recorded venue: /v1/models reports the expected model and max_model_len;
 4. a real completion comes back (a server is never trusted on /health alone).
 
@@ -38,7 +38,7 @@ from .scorer import score
 from .session import run_session
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-FREEZE = os.path.join(ROOT, "docs", "phase3-freeze.json")
+FREEZE = os.path.join(ROOT, "docs", "freeze.json")
 MODEL = "gemma-4-26b-a4b"
 ENVELOPE = 262144
 PILOT_TYPES = ["selfpay_booking", "ineligible_coverage", "selfpay_retraction", "covered_booking"]
@@ -57,7 +57,7 @@ PILOT_A = {"selfpay_booking": 3, "ineligible_coverage": 3, "selfpay_retraction":
 
 
 def pilot_a_grid():
-    """Arm A's exploratory pilot (Keith, 2026-10-24): 10 of the pilot's 20 patients, weighted to the
+    """Arm A's exploratory pilot: 10 of the pilot's 20 patients, weighted to the
     types where payment matters, at all 48 payment settings: 480 conversations."""
     truths = [T.build(typ, f"pilot:{i}") for typ, n in PILOT_A.items() for i in range(n)]
     return [(t, single_dimension_dials("payment", s)) for s in all_settings() for t in truths]

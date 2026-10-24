@@ -1,6 +1,6 @@
-"""Freeze the phase 3 instrument by hash, before any served model sees a line.
+"""Freeze the instrument by hash: the contract, its change log and the scoring code.
 
-Writes docs/phase3-freeze.json. clinicbench.live refuses to start if any listed file differs.
+Writes docs/freeze.json. clinicbench.live refuses to start if any listed file differs.
 A change after the freeze is logged in docs/contract-changes.md with its reason, then refrozen.
 
 usage: python scripts/freeze.py
@@ -26,7 +26,7 @@ FILES = [
 if __name__ == "__main__":
     man = {"frozen_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "files": {p: hashlib.sha256(open(os.path.join(ROOT, p), "rb").read()).hexdigest() for p in FILES}}
-    path = os.path.join(ROOT, "docs", "phase3-freeze.json")
+    path = os.path.join(ROOT, "docs", "freeze.json")
     with open(path, "w") as fh:
         json.dump(man, fh, indent=1)
     print("froze", len(FILES), "files at", man["frozen_at"])

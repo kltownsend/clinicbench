@@ -1,4 +1,4 @@
-"""Render a live run's sessions as annotated markdown for Keith's read.
+"""Render a live run's sessions as annotated markdown for a person to read.
 
 Under each patient line: the act and disclosure code decided before the voice spoke. Under each
 clinician line: the tool calls it made, and every question the driver put to the model with the

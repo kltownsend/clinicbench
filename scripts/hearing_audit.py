@@ -1,4 +1,4 @@
-"""Build Keith's audit of the model hearing from an arm A run.
+"""Build a person's audit of the model hearing from an arm A run.
 
 Samples agent replies, stratified by what Gemma read in them (an offer with a consent question,
 another offer, a hand-off, a refusal, a question only, nothing), and writes them as a markdown
