@@ -151,6 +151,10 @@ Results compare only between runs with the same freeze.
 ## Credits and licenses
 
 - clinicbench: MIT (`LICENSE`), except the third-party material listed in `THIRD_PARTY_NOTICES.md`.
+- The clinic world descends from the clinic appointment example in Jeremy Schulman's
+  [Promise-Driven Agentic Kit](https://github.com/jeremyschulman/promise-driven-agentic-kit), which
+  Layer2C Lab 23 started from and expanded. clinicbench ports Lab 23's expanded world; it doesn't
+  include the kit's code.
 - The code-driven driver is from Layer2C Lab 23. The few-shot examples are from Layer2C Lab 024's
   corpus; their patient wording was written by a language model.
 - Built with Claude Code, an Anthropic tool, under the author's design rulings.
