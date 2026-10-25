@@ -1,5 +1,5 @@
 {
- "schema_version": "handoff.architecture/1",
+ "schema_version": "handoff.architecture/1.1",
  "architecture_id": "clinic.reference.f",
  "status": "draft",
  "review": "Bindings ruled by Keith on 2026-10-25 (evidence.json, human_decisions). The role-to-function bindings and selections are approved instrument judgments for this reference; the package stays a draft because fr.workflow and fr.write-check are unmapped.",
@@ -94,6 +94,9 @@
    "decision": "the next step in the scheduling workflow",
    "decision_maker": "code",
    "enforcement_point": "enterprise.lab23-driver Driver.step",
+   "function_requirement_ids": [
+    "fr.workflow"
+   ],
    "allowed_evidence": [
     "patient text",
     "store lookups",
@@ -113,6 +116,9 @@
    "decision": "whether the patient agreed to the write",
    "decision_maker": "patient",
    "enforcement_point": "enterprise.lab23-driver explicit_confirm (the four-word rule)",
+   "function_requirement_ids": [
+    "fr.consent-judge"
+   ],
    "allowed_evidence": [
     "the patient's own words matched by code: \"I confirm\", or a yes of four words or fewer"
    ],
@@ -127,6 +133,9 @@
    "decision": "whether the patient will pay out of pocket",
    "decision_maker": "patient",
    "enforcement_point": "enterprise.lab23-driver explicit_selfpay",
+   "function_requirement_ids": [
+    "fr.consent-judge"
+   ],
    "allowed_evidence": [
     "the patient's own words matched by code"
    ],
@@ -157,6 +166,10 @@
    "decision": "whether a write goes through given the clinic's records",
    "decision_maker": "store",
    "enforcement_point": "enterprise.clinic-tools ToolAPI",
+   "function_requirement_ids": [
+    "fr.write-check",
+    "fr.records"
+   ],
    "allowed_evidence": [
     "the store's own records: ids, open slots, appointments"
    ],
