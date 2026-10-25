@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "68eff7a9d4eb260d5d28f38e2992c6897f69a030",
+    "commit": "72c15bc61820dbf15bda48afac1d09b5e6347fc9",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "4316195d3f98a3e0ebb6bfb4d23c6739055de107"
+    "commit": "3ac1160873ad432b952a9a4593bf4c860843e2c1"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -438,6 +438,17 @@
    "refs": [
     "handoff/reference/architecture.json",
     "https://labs.layer2c.com/labs/who-decides-consent"
+   ]
+  },
+  {
+   "id": "ruling.clinic-reference-typed-links",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T03:15:23Z",
+   "decision": "Typed links (handoff v1.1) for clinic.reference.f, as proposed: binding.workflow rests on fr.workflow; binding.consent and binding.selfpay-willing on fr.consent-judge; binding.write-check on fr.write-check and fr.records; binding.selfpay-claim-ceiling carries no list because nothing enforces it.",
+   "reason": "Each binding should rest on the functions that make its decision, not on every function its implementer happens to implement. Under F the reader's yes never commits consent, so the reader stays out of the consent list and is reached through the consent judge's dependency on it.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "layer2csite schemas/handoff/v1 at 72c15bc"
    ]
   }
  ]
