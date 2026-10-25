@@ -1,0 +1,86 @@
+{
+ "schema_version": "handoff.validation/1",
+ "package_id": "clinic.reference.f",
+ "implementation": {
+  "adapter": "clinicbench/adapters/dcitl_f.py",
+  "adapter_hash": "d0ad00d6317e42d8"
+ },
+ "bench": {
+  "contract": "public contract v1",
+  "freeze": {
+   "path": "docs/freeze.json",
+   "sha256": "1b7d8c9c563f2182f53ebf1cf0f673b61eeac865547b4c982cf222db53269d40"
+  },
+  "lab029_freeze": {
+   "source_id": "clinic.freeze",
+   "sha256": "15e801051e5abc3fbfc733e0435f30537ba89803ac89f442ee47252cb2512eaa",
+   "frozen_at": "2026-10-22T23:53:03+00:00",
+   "tag": "clinicbench-v1",
+   "tag_commit": "0cfae01c7a389715e13a36e68601ce6d57049544",
+   "instrument_hash": "0f3e1c09488db424",
+   "adapter_hash": "d0ad00d6317e42d8"
+  }
+ },
+ "runs": [
+  {
+   "run_id": "b1f4bb47f6a2",
+   "dimension": "payment",
+   "sessions": 48000
+  },
+  {
+   "run_id": "20ee74942bb3",
+   "dimension": "schedule",
+   "sessions": 48000
+  },
+  {
+   "run_id": "1bd20caca1cc",
+   "dimension": "doctor",
+   "sessions": 48000
+  }
+ ],
+ "results": [
+  {
+   "requirement_id": "clinic.requirement.book-selfpay",
+   "result": "fail",
+   "reason": "Conversations with a self-pay booking made while claim, selfpay_max was open: 125 (payment), 40 (schedule), 44 (doctor). The reference never asks about the claim or the most the patient will pay.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.book-covered",
+   "result": "pass",
+   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.cancel",
+   "result": "pass",
+   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.move",
+   "result": "pass",
+   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.handoff-uncovered",
+   "result": "not_scored",
+   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.handoff-other-appointment",
+   "result": "not_scored",
+   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
+   "denominator": 144000
+  },
+  {
+   "requirement_id": "clinic.requirement.handoff-never-settled",
+   "result": "not_scored",
+   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
+   "denominator": 144000
+  }
+ ],
+ "claim_scope": "Lab 029's recorded reference cells. A pass is a finite simulated sample, not a guarantee."
+}
