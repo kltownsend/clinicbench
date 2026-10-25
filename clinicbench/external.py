@@ -2,9 +2,10 @@
 
 A third party implements a clinician in any language as a program that reads one JSON message
 per line on stdin and writes one per line on stdout (`docs/adapter-contract.md`). The bench
-runs it as a child process, so the clinician can't reach the truth, the dials, the disclosure
-log or the scoring state: they never leave the bench's process. Its only way to act is the
-clinic's tools, through `RestrictedTools`.
+runs it as a child process and never sends it the truth, the dials, the disclosure log or the
+scoring state. Its only way to act on the clinic is the clinic's tools, through `RestrictedTools`.
+A child that goes looking can still rebuild the truth from the bench's own code; only a sandbox
+stops that (see Isolation below and `examples/adversarial/`).
 
 Bench to clinician:
     {"type": "start", "contract": "clinicbench.adapter/1", "session_id": str, "tools": [..]}
@@ -35,13 +36,24 @@ MAX_MESSAGES messages of at most MAX_LINE_BYTES each.
 The child starts with a scrubbed environment (PATH, a locale, and a temporary HOME and working
 directory) plus whatever the caller passes in `env`, such as a model endpoint's key. That isn't
 a sandbox; it only keeps the bench's own environment and working directory out of reach by default.
+
+Isolation is the runner's declaration, like `authorize` is the clinician's. `Isolation` names the
+launcher that wraps the child: `PROCESS`, the default, is plain process separation and leaves the
+run unmeasured; a declared wrapper (a container, gVisor, a hosted sandbox) marks it measured. The
+bench can't verify a wrapper's claims. What it does check is its own side: it hashes the files it
+watches, the instrument by default plus anything the caller adds, before and after the session,
+and a change ends the session as `adapter_error`. Reading those files can only buy a clinician
+service, since the trace judges authority by what the channel settled. Writing them corrupts the
+record, so that's the boundary the check holds.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import queue
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -49,6 +61,7 @@ import threading
 import time
 import uuid
 
+from .cells import INSTRUMENT_FILES
 from .records import TURN_TIME_LIMIT_S
 from .session import run_session
 
@@ -93,6 +106,55 @@ class RestrictedTools:
         raise AttributeError("RestrictedTools is read-only")
 
 
+class Isolation:
+    """How the child is launched. `wrap` is a command prefix; `{home}` in it becomes the child's
+    temporary home. A wrapper is declared, not verified: the run says which one it used."""
+
+    def __init__(self, name: str, wrap: list[str] | None = None):
+        self.name, self.wrap = name, list(wrap or [])
+
+    @property
+    def measured(self):
+        return bool(self.wrap)
+
+    def command(self, cmd, home):
+        return [w.replace("{home}", home) for w in self.wrap] + list(cmd)
+
+    def record(self):
+        return {"name": self.name, "wrap": self.wrap, "measured": self.measured}
+
+
+PROCESS = Isolation("process")
+BENCH_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def watched_files(paths):
+    """Every file under `paths`, sorted; a directory is walked."""
+    out = []
+    for p in paths:
+        if os.path.isdir(p):
+            out += [os.path.join(d, f) for d, _, fs in os.walk(p) for f in fs]
+        else:
+            out.append(p)
+    return sorted(set(os.path.abspath(f) for f in out))
+
+
+def fingerprint(paths):
+    """sha256 of each watched file, or None for one that's missing."""
+    fp = {}
+    for f in watched_files(paths):
+        try:
+            with open(f, "rb") as fh:
+                fp[f] = hashlib.sha256(fh.read()).hexdigest()
+        except OSError:
+            fp[f] = None
+    return fp
+
+
+def changed(before, after):
+    return sorted(f for f in set(before) | set(after) if before.get(f) != after.get(f))
+
+
 class AdapterError(RuntimeError):
     """The clinician failed: a protocol break, a timeout or an exit. Scored against it."""
 
@@ -111,15 +173,17 @@ class ExternalClinician:
     name = "external"
 
     def __init__(self, cmd, tools: RestrictedTools, session_id: str, turn_limit_s: float = TURN_TIME_LIMIT_S,
-                 env: dict | None = None):
+                 env: dict | None = None, isolation: Isolation = PROCESS):
         self.tools, self.limit = tools, turn_limit_s
         self.fault = None
         self.home = tempfile.mkdtemp(prefix="clinicbench-adapter-")
         cmd = [os.path.abspath(c) if os.path.exists(c) else c for c in cmd]
         child_env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C.UTF-8",
                      "HOME": self.home, "TMPDIR": self.home, **(env or {})}
-        self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1,
-                                     env=child_env, cwd=self.home)
+        # Its own process group, so close() also ends anything the clinician started.
+        self.proc = subprocess.Popen(isolation.command(cmd, self.home), stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE, text=True, bufsize=1, env=child_env, cwd=self.home,
+                                     start_new_session=True)
         self.lines: queue.Queue = queue.Queue()
         threading.Thread(target=self._pump, daemon=True).start()
         self.model = None
@@ -203,18 +267,27 @@ class ExternalClinician:
             try:
                 self.proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                self.proc.kill()
+                pass
+        try:
+            os.killpg(self.proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+        self.proc.wait()
         shutil.rmtree(self.home, ignore_errors=True)
 
 
-def run_external(truth, dials, cmd, session_id, hearing, env=None, turn_limit_s=TURN_TIME_LIMIT_S):
+def run_external(truth, dials, cmd, session_id, hearing, env=None, turn_limit_s=TURN_TIME_LIMIT_S,
+                 isolation: Isolation = PROCESS, watch=()):
     """`session.run_session` with an external clinician. The disclosure log is never passed on,
     the child process is closed when the session ends, and a clinician's own failure ends the
-    session as `adapter_error`, not infrastructure."""
+    session as `adapter_error`, not infrastructure. The session records the declared isolation,
+    and the watched files (the instrument plus `watch`) are checked once the child is gone."""
     made = []
+    paths = [os.path.join(BENCH_ROOT, f) for f in INSTRUMENT_FILES] + list(watch)
+    before = fingerprint(paths)
 
     def make(api, log):
-        made.append(ExternalClinician(cmd, RestrictedTools(api), session_id, turn_limit_s, env))
+        made.append(ExternalClinician(cmd, RestrictedTools(api), session_id, turn_limit_s, env, isolation))
         return made[0]
     try:
         s = run_session(truth, dials, make, session_id, hearing=hearing)
@@ -222,10 +295,16 @@ def run_external(truth, dials, cmd, session_id, hearing, env=None, turn_limit_s=
         if made and made[0].fault and s["end"].get("reason") == "infra_error":
             s["end"] = {"reason": "adapter_error", "by": "clinician", "turns": s["end"]["turns"],
                         "error": made[0].fault}
-        return s
     finally:
         for c in made:
             c.close()
+    moved = changed(before, fingerprint(paths))
+    s["isolation"] = {**isolation.record(), "measured": isolation.measured and not moved}
+    s["integrity"] = {"watched": len(before), "changed": moved}
+    if moved:
+        s["end"] = {"reason": "adapter_error", "by": "clinician", "turns": s["end"].get("turns"),
+                    "error": f"changed {len(moved)} file(s) the bench watches: " + ", ".join(moved)[:400]}
+    return s
 
 
 if __name__ == "__main__":
@@ -244,13 +323,20 @@ if __name__ == "__main__":
     ap.add_argument("--type", default="selfpay_booking")
     ap.add_argument("--seed", default="demo:0")
     ap.add_argument("--dimension", default="payment")
+    ap.add_argument("--isolation", default="process", help="the name of the launcher you declare")
+    ap.add_argument("--wrap", default="", help="the launcher's command prefix, split on spaces; {home} is the child's home")
+    ap.add_argument("--watch", action="append", default=[], help="a file or folder the clinician mustn't change")
     ap.add_argument("cmd", nargs=argparse.REMAINDER)
     a = ap.parse_args()
     if not a.cmd:
         sys.exit("give the clinician's command, e.g. python3 examples/minimal_adapter.py")
+    if a.wrap and a.isolation == "process":
+        sys.exit("a wrapper needs a name: --isolation NAME")
+    iso = Isolation(a.isolation, a.wrap.split()) if a.wrap else PROCESS
     s = run_external(T.build(a.type, a.seed), single_dimension_dials(a.dimension, EASY), a.cmd,
-                     f"{a.type}:{a.seed}", DriverHearing())
+                     f"{a.type}:{a.seed}", DriverHearing(), isolation=iso, watch=a.watch)
     out = {"outcome": scorer.score(s)["tier1"]["outcome"], "end": s["end"],
+           "isolation": s["isolation"], "integrity": s["integrity"],
            "trace": [{"seq": c["seq"], "tool": c["tool"], "ok": c["result"]["ok"]} for c in s["trace"]],
            "commitments": commitment_trace(s)}
     json.dump(out, sys.stdout, indent=1)

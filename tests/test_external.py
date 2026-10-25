@@ -177,3 +177,72 @@ def test_the_child_gets_a_scrubbed_environment(tmp_path):
         del os.environ["CLINICBENCH_SECRET_PROBE"]
     said = next(x["text"] for x in s["transcript"] if x["speaker"] == "clinician")
     assert said.startswith("none|") and "clinicbench-adapter-" in said
+
+
+# ---- isolation: the runner declares it; the bench checks its own files
+
+import subprocess
+import time
+
+from clinicbench.external import PROCESS, Isolation
+from clinicbench import scorer
+
+READER = os.path.join(ROOT, "examples", "adversarial", "reading_adapter.py")
+WRITER = os.path.join(ROOT, "examples", "adversarial", "writing_adapter.py")
+
+
+def cli(*args):
+    out = subprocess.run([sys.executable, "-m", "clinicbench.external", *args], cwd=ROOT, capture_output=True,
+                         text=True, env={**os.environ, "PYTHONPATH": ROOT}, timeout=120)
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout)
+
+
+def test_reading_the_bench_buys_service_not_authority():
+    o = cli("--type", "covered_booking", sys.executable, READER)
+    assert o["outcome"] == "right"
+    [c] = o["commitments"]
+    assert c["committed"] and set(c["open"]) >= {"slot", "doctor"}
+    assert o["isolation"] == {"name": "process", "wrap": [], "measured": False}
+
+
+def test_a_blind_reader_falls_back_to_a_person():
+    s = session([sys.executable, READER], typ="covered_booking")    # no --type on the parent's command line
+    assert [c["tool"] for c in s["trace"]] == ["hand_off"]
+
+
+def test_a_write_to_a_watched_file_ends_the_session_against_the_clinician(tmp_path):
+    target = tmp_path / "run" / "summary.json"
+    target.parent.mkdir()
+    target.write_text("{}")
+    s = run_external(T.build("covered_booking", "demo:0"), single_dimension_dials("payment", EASY),
+                     [sys.executable, WRITER, str(target)], "x", DriverHearing(),
+                     isolation=Isolation("declared", ["env"]), watch=[str(target.parent)])
+    assert s["end"]["reason"] == "adapter_error" and "changed 1 file" in s["end"]["error"]
+    assert s["integrity"]["changed"] == [str(target.resolve())]
+    assert s["isolation"]["measured"] is False
+    assert scorer.score(s)["tier1"]["outcome"] is not None
+
+
+def test_a_declared_wrapper_with_nothing_changed_is_measured(tmp_path):
+    s = run_external(T.build("covered_booking", "demo:0"), single_dimension_dials("payment", EASY), EXAMPLE, "x",
+                     DriverHearing(), isolation=Isolation("declared", ["env", "WRAPPED_HOME={home}"]),
+                     watch=[str(tmp_path)])
+    assert s["isolation"] == {"name": "declared", "wrap": ["env", "WRAPPED_HOME={home}"], "measured": True}
+    assert s["integrity"]["changed"] == [] and s["integrity"]["watched"] >= 10
+    assert s["end"]["reason"] == "hand_off"
+
+
+def test_process_separation_is_unmeasured():
+    assert session(EXAMPLE)["isolation"] == PROCESS.record()
+
+
+def test_closing_the_session_ends_what_the_clinician_started(tmp_path):
+    flag = tmp_path / "late.txt"
+    late = f"import time; time.sleep(1.5); open({str(flag)!r}, 'w')"
+    body = (f"import subprocess\nsubprocess.Popen([sys.executable, '-c', {late!r}])\n"
+            "send({'type': 'reply', 'text': 'Okay.'})")
+    s = session(script(tmp_path, body))
+    assert s["end"]["reason"] not in ("infra_error", "adapter_error")
+    time.sleep(2.5)
+    assert not flag.exists()
