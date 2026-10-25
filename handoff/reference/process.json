@@ -3,7 +3,7 @@
  "process_id": "clinic.scheduling",
  "sources": {
   "repository": "github.com/kltownsend/clinicbench",
-  "commit": "bb4be01f26af9f2d90ab80493324b0588bbb1ddf",
+  "commit": "87491ac016fdc4b8a22a615317e2ae959ad8ec6d",
   "contract": {
    "path": "docs/contract.md",
    "sha256": "8f1206a6b9384eb36f2d41eb81dd1c70c679b693430fc00fb370f4cdfbde53c7"
@@ -303,8 +303,9 @@
     "contract_section": "5"
    },
    "test_refs": [
-    "clinicbench/selftest/golden.py::relative_cancel_leak",
-    "clinicbench/selftest/golden.py::relative_ended"
+    "clinicbench/selftest/golden.py::relative_ended",
+    "clinicbench/selftest/golden.py::double_booking_refused_no_handoff",
+    "clinicbench/selftest/golden.py::double_booking_handed_off"
    ]
   },
   {

@@ -101,7 +101,7 @@
   },
   {
    "requirement_id": "clinic.requirement.handoff-other-appointment",
-   "test_ref": "clinicbench/selftest/golden.py::relative_cancel_leak",
+   "test_ref": "clinicbench/selftest/golden.py::relative_ended",
    "result": "fail",
    "reason": "11283 of 20160 conversations that required this got no hand-off (reached by cell: payment 2652 of 6720; schedule 3248 of 6720; doctor 2977 of 6720).",
    "denominator": 20160,
@@ -125,5 +125,5 @@
   }
  ],
  "claim_scope": "Lab 029's recorded reference cells. A pass is a finite simulated sample, not a guarantee.",
- "package_sha256": "fb21e3e58f021d02aded87318de98a399d949289668d54e8d72aeafa0664b0d9"
+ "package_sha256": "b8b9670f8f615966507ce129eb814ea541661cd54f366856eb3538948bc8cae2"
 }
