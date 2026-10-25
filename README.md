@@ -15,8 +15,9 @@ figure are on this repository's `data-v1` release.
 
 The Clinic is the learning lab built on this bench, at https://labs.layer2c.com/clinic. Its
 walkthrough runs the lab once on the site, against recorded results. This repository is where the
-walkthrough ends. Load the kit on your own infrastructure or the platform you're evaluating, change
-one thing, and it's a learning lab and the base for a proof of concept (PoC).
+walkthrough ends. The kit is a ready-made proof of concept (PoC). Run it on your own solution, or
+take it to your vendor and ask them to run it on theirs, behind the adapter contract. Make the
+change that matters to you, and it's a learning lab as well.
 
 | Start here | What it's for |
 |---|---|
