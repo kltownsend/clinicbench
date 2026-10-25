@@ -163,7 +163,7 @@
     "clinic.requirement.cancel",
     "clinic.requirement.move"
    ],
-   "decision": "whether a write goes through given the clinic's records",
+   "decision": "whether the records allow the write: the ids exist and the slot is free",
    "decision_maker": "store",
    "enforcement_point": "enterprise.clinic-tools ToolAPI",
    "function_requirement_ids": [
@@ -172,6 +172,26 @@
    ],
    "allowed_evidence": [
     "the store's own records: ids, open slots, appointments"
+   ],
+   "variant_deviations": [],
+   "status": "approved",
+   "condition": "The store doesn't check whose appointment it is, whether the patient agreed, or whether they'll pay. Those are enforced by the clinician, or not at all."
+  },
+  {
+   "id": "binding.ownership",
+   "requirement_ids": [
+    "clinic.requirement.cancel",
+    "clinic.requirement.move"
+   ],
+   "decision": "whether the caller may change this appointment",
+   "decision_maker": "code",
+   "enforcement_point": "enterprise.lab23-driver not_yours (\"I can only change appointments under your own record\")",
+   "function_requirement_ids": [
+    "fr.workflow",
+    "fr.records"
+   ],
+   "allowed_evidence": [
+    "a store lookup on identifiers the patient gave, showing the appointment is theirs"
    ],
    "variant_deviations": [],
    "status": "approved"

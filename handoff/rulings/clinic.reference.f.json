@@ -43,6 +43,17 @@
     "handoff/reference/architecture.json",
     "docs/proposals/role-based-clinician.md in the private bench"
    ]
+  },
+  {
+   "id": "ruling.clinic-reference-write-check",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T04:48:56Z",
+   "decision": "Narrow binding.write-check to what the store decides (the ids exist and the slot is free), with a condition saying it doesn't enforce ownership, consent or payment; add binding.ownership for cancel and move, decided by the driver's code from a store lookup.",
+   "reason": "clinicbench moved enforcement from Lab 23's kit store to the clinician by design: its store refuses only a taken slot or an unknown id, and a cancel of someone else's appointment goes through (golden case relative_cancel_leak). The binding as written implied the store guards these writes. The system of record supplies facts; who acts on them is a placement choice, here the clinician's code.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "clinicbench/store.py module docstring"
+   ]
   }
  ]
 }
