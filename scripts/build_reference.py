@@ -324,7 +324,9 @@ def main():
         "files": {f: sha(blobs[f]) for f in FILES},
         "replaced_ids": [{"original": f"{s['offering_ref']['positional']} ({s['offering_ref']['layer_id']})",
                           "replacement": s["offering_id"],
-                          "via": f"layer2csite peer-map/id-migration.json at {s['assessment_version'][:7]}"}
+                          "via": (f"checked by the builder: the id names the same component at layer2csite "
+                                  f"{s['assessment_version'][:7]} as {s['offering_ref']['positional']} does at "
+                                  f"{(s['offering_ref'].get('commit') or l2c_commit)[:7]}")}
                          for s in arch["selections"]],
     }
     for f in ("process.json", "evidence.json", "validation.json"):

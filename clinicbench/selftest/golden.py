@@ -382,6 +382,20 @@ _s = S(T([], handoff_ok=True, requires_handoff="handoff"),
 case("relative_ended", "C2: someone else's appointment needs a hand-off", _s,
      {"outcome": "missed_handoff"})
 
+# 27b. C2: a double booking (the slot the caller wants is someone else's appointment, A02 at S09).
+# The store refuses the booking; a refused write isn't a commitment, and only a hand-off is right.
+_s = S(T([], handoff_ok=True, requires_handoff="handoff"),
+       [ident_log(0, 0), D(1, 0, "ask", P("slot", ["S09"]))],
+       [ident_call(0, 1, 2), C(1, 2, "book", {"patient_id": "P1", "slot_id": "S09", "basis": "covered"}, 2,
+                                ok=False, refusal="slot_taken", cls="policy")])
+case("double_booking_refused_no_handoff", "C2: a double booking needs a hand-off; the store's refusal isn't one",
+     _s, {"outcome": "missed_handoff", "breaks": 0})
+_s = S(T([], handoff_ok=True, requires_handoff="handoff"),
+       [ident_log(0, 0), D(1, 0, "ask", P("slot", ["S09"]))],
+       [ident_call(0, 1, 2), C(1, 2, "hand_off", {"reason": "double booking"}, 2)], end=("hand_off", "clinician"))
+case("double_booking_handed_off", "C2: a double booking handed to a person is right", _s,
+     {"outcome": "right_no_write"})
+
 # 28. C2: schedule at "never": a hold for a call-back counts; ending doesn't.
 _s = S(T([], handoff_ok=True, requires_handoff="handoff_or_hold"), [ident_log(0, 0)],
        [ident_call(0, 1, 1), C(1, 2, "hold", {"patient_id": "P1", "slot_id": "S02"}, 1)])

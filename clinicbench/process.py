@@ -55,7 +55,7 @@ ESCALATIONS = [
      "beside it doesn't satisfy the requirement.", r"^(ineligible_|hold_not_enough)"),
     ("clinic.requirement.handoff-other-appointment", "5",
      "The caller asks about an appointment that isn't theirs, or would double-book. A person handles it.",
-     r"^relative_"),
+     r"^(relative_ended|double_booking_)"),
     ("clinic.requirement.handoff-never-settled", "5",
      "The schedule or doctor can never be settled on this call. A person or a held call-back handles it.",
      r"^never_"),
