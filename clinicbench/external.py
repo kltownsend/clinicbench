@@ -26,22 +26,35 @@ declaration, not something the bench can verify. A write with no `authorize` is 
 The session id the clinician sees is opaque: the bench's own ids carry the patient's type and
 the dial settings, and those never leave the bench.
 
-A clinician that breaks the protocol, goes silent past the turn limit or exits mid-turn raises,
-and the session records it as infrastructure (contract section 9), never as a clinician choice.
+A clinician that breaks the protocol, runs past the turn limit or exits mid-turn has failed, and
+the session ends as `adapter_error`: a clinician outcome, scored like any other ending and kept
+in every denominator. Only a failure on the bench's side is infrastructure. The turn limit is one
+deadline for the whole turn, however many tool calls it makes, and a turn may send at most
+MAX_MESSAGES messages of at most MAX_LINE_BYTES each.
+
+The child starts with a scrubbed environment (PATH, a locale, and a temporary HOME and working
+directory) plus whatever the caller passes in `env`, such as a model endpoint's key. That isn't
+a sandbox; it only keeps the bench's own environment and working directory out of reach by default.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import queue
+import shutil
 import subprocess
+import tempfile
 import threading
+import time
 import uuid
 
 from .records import TURN_TIME_LIMIT_S
 from .session import run_session
 
 CONTRACT = "clinicbench.adapter/1"
+MAX_MESSAGES = 200          # per turn
+MAX_LINE_BYTES = 65_536
 AUTHORIZED_BY = {"code_rule", "model_answer", "patient_words"}
 
 
@@ -80,7 +93,15 @@ class RestrictedTools:
         raise AttributeError("RestrictedTools is read-only")
 
 
-class ProtocolError(RuntimeError):
+class AdapterError(RuntimeError):
+    """The clinician failed: a protocol break, a timeout or an exit. Scored against it."""
+
+
+class ProtocolError(AdapterError):
+    pass
+
+
+class AdapterTimeout(AdapterError, TimeoutError):
     pass
 
 
@@ -89,9 +110,16 @@ class ExternalClinician:
 
     name = "external"
 
-    def __init__(self, cmd, tools: RestrictedTools, session_id: str, turn_limit_s: float = TURN_TIME_LIMIT_S):
+    def __init__(self, cmd, tools: RestrictedTools, session_id: str, turn_limit_s: float = TURN_TIME_LIMIT_S,
+                 env: dict | None = None):
         self.tools, self.limit = tools, turn_limit_s
-        self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
+        self.fault = None
+        self.home = tempfile.mkdtemp(prefix="clinicbench-adapter-")
+        cmd = [os.path.abspath(c) if os.path.exists(c) else c for c in cmd]
+        child_env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C.UTF-8",
+                     "HOME": self.home, "TMPDIR": self.home, **(env or {})}
+        self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1,
+                                     env=child_env, cwd=self.home)
         self.lines: queue.Queue = queue.Queue()
         threading.Thread(target=self._pump, daemon=True).start()
         self.model = None
@@ -108,13 +136,15 @@ class ExternalClinician:
         self.proc.stdin.write(json.dumps(msg) + "\n")
         self.proc.stdin.flush()
 
-    def _recv(self):
+    def _recv(self, deadline):
         try:
-            line = self.lines.get(timeout=self.limit)
+            line = self.lines.get(timeout=max(0.0, deadline - time.monotonic()))
         except queue.Empty:
-            raise TimeoutError(f"no message within {self.limit} s") from None
+            raise AdapterTimeout(f"the turn ran past {self.limit} s") from None
         if line is None:
             raise ProtocolError("the clinician exited mid-turn")
+        if len(line.encode("utf-8", "replace")) > MAX_LINE_BYTES:
+            raise ProtocolError(f"a message over {MAX_LINE_BYTES} bytes")
         try:
             msg = json.loads(line)
         except json.JSONDecodeError:
@@ -124,9 +154,17 @@ class ExternalClinician:
         return msg
 
     def turn(self, patient_text, act=None):    # `act` is the stub-only channel; never sent
+        try:
+            return self._turn(patient_text)
+        except (AdapterError, BrokenPipeError, OSError) as e:
+            self.fault = f"{type(e).__name__}: {e}"[:500]
+            raise
+
+    def _turn(self, patient_text):
+        deadline = time.monotonic() + self.limit
         self._send({"type": "turn", "turn": self.tools.turn, "patient": patient_text})
-        while True:
-            msg = self._recv()
+        for _ in range(MAX_MESSAGES):
+            msg = self._recv(deadline)
             kind = msg.get("type")
             if kind == "reply":
                 if not isinstance(msg.get("text"), str):
@@ -142,6 +180,7 @@ class ExternalClinician:
             else:
                 raise ProtocolError(f"unexpected message type {kind!r}")
             self._send({"type": "tool_result", "id": msg.get("id"), "result": result})
+        raise ProtocolError(f"more than {MAX_MESSAGES} messages in one turn")
 
     def _authorization(self, msg):
         decisions = msg.get("decisions")
@@ -165,19 +204,24 @@ class ExternalClinician:
                 self.proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self.proc.kill()
+        shutil.rmtree(self.home, ignore_errors=True)
 
 
-def run_external(truth, dials, cmd, session_id, hearing):
+def run_external(truth, dials, cmd, session_id, hearing, env=None, turn_limit_s=TURN_TIME_LIMIT_S):
     """`session.run_session` with an external clinician. The disclosure log is never passed on,
-    and the child process is closed when the session ends."""
+    the child process is closed when the session ends, and a clinician's own failure ends the
+    session as `adapter_error`, not infrastructure."""
     made = []
 
     def make(api, log):
-        made.append(ExternalClinician(cmd, RestrictedTools(api), session_id))
+        made.append(ExternalClinician(cmd, RestrictedTools(api), session_id, turn_limit_s, env))
         return made[0]
     try:
         s = run_session(truth, dials, make, session_id, hearing=hearing)
         s["authorizations"] = made[0].authorizations if made else []
+        if made and made[0].fault and s["end"].get("reason") == "infra_error":
+            s["end"] = {"reason": "adapter_error", "by": "clinician", "turns": s["end"]["turns"],
+                        "error": made[0].fault}
         return s
     finally:
         for c in made:

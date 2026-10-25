@@ -75,15 +75,15 @@ def test_restricted_tools_expose_no_store_log_or_trace():
         rt.call("snapshot", {})
 
 
-def test_an_unknown_tool_is_infrastructure_not_an_effect(tmp_path):
+def test_an_unknown_tool_is_the_clinicians_failure_not_an_effect(tmp_path):
     s = session(script(tmp_path, "tool(1, 'drop_tables')"))
-    assert s["end"]["reason"] == "infra_error" and "unknown tool" in s["end"]["error"]
+    assert s["end"]["reason"] == "adapter_error" and "unknown tool" in s["end"]["error"]
     assert s["trace"] == []
 
 
-def test_a_malformed_message_is_infrastructure(tmp_path):
+def test_a_malformed_message_is_the_clinicians_failure(tmp_path):
     s = session(script(tmp_path, "sys.stdout.write('not json\\n'); sys.stdout.flush()"))
-    assert s["end"]["reason"] == "infra_error"
+    assert s["end"]["reason"] == "adapter_error" and s["end"]["by"] == "clinician"
 
 
 def test_a_silent_clinician_times_out(tmp_path):
@@ -144,7 +144,36 @@ send({'type': 'reply', 'text': 'staff will follow up with you directly.'})
     assert commitment_trace(s)[0]["authorizer"]["recorded"]
 
 
-def test_a_malformed_authorization_is_infrastructure(tmp_path):
+def test_a_malformed_authorization_is_the_clinicians_failure(tmp_path):
     body = "send({'type': 'authorize', 'tool': 'book', 'args': {}, 'decisions': [{'decision': 'x', 'by': 'vibes'}]})"
     s = session(script(tmp_path, body))
-    assert s["end"]["reason"] == "infra_error" and "authorize" in s["end"]["error"]
+    assert s["end"]["reason"] == "adapter_error" and "authorize" in s["end"]["error"]
+
+
+def test_tool_calls_dont_reset_the_turn_deadline(tmp_path):
+    body = """
+import time
+for n in range(20):
+    time.sleep(0.2); tool(n, 'list_slots', specialty='dermatology')
+send({'type': 'reply', 'text': 'Okay.'})
+"""
+    s = run_external(T.build("selfpay_booking", "demo:0"), single_dimension_dials("payment", EASY),
+                     script(tmp_path, body), "x", DriverHearing(), turn_limit_s=1.0)
+    assert s["end"]["reason"] == "adapter_error" and "ran past" in s["end"]["error"]
+
+
+def test_a_flood_of_messages_is_capped(tmp_path):
+    s = session(script(tmp_path, "for n in range(500): tool(n, 'list_slots', specialty='dermatology')"))
+    assert s["end"]["reason"] == "adapter_error" and "messages in one turn" in s["end"]["error"]
+
+
+def test_the_child_gets_a_scrubbed_environment(tmp_path):
+    import os
+    os.environ["CLINICBENCH_SECRET_PROBE"] = "leak"
+    try:
+        body = "import os; send({'type': 'reply', 'text': os.environ.get('CLINICBENCH_SECRET_PROBE', 'none') + '|' + os.getcwd()})"
+        s = session(script(tmp_path, body))
+    finally:
+        del os.environ["CLINICBENCH_SECRET_PROBE"]
+    said = next(x["text"] for x in s["transcript"] if x["speaker"] == "clinician")
+    assert said.startswith("none|") and "clinicbench-adapter-" in said

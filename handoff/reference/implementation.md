@@ -28,7 +28,9 @@ this rule and Delegated when the model's yes counts.
 
 Build against `docs/adapter-contract.md`. Your clinician runs in its own process and speaks JSON
 lines. It gets one patient line per turn and the clinic's tools, and nothing else. The bench
-never sends the patient's truth, the dials or the disclosure log.
+never sends the patient's truth, the dials or the disclosure log. Phrase what the patient must
+hear in the forms `docs/hearing-grammar.md` lists, and send `authorize` before each write so the
+trace records what let it through.
 
 ## Write preconditions
 
@@ -42,8 +44,11 @@ by whoever `settle_authority` names:
 - `clinician_states_store_holds`: you stated the cost from the store before asking.
 
 A self-pay booking needs the claim question and the most the patient will pay. The reference
-never asks either, and every self-pay booking it made broke on both. A reconstruction that asks
-them improves on the reference. That's a claim that needs a paired run, not an assumption.
+never asks either, and every self-pay booking it made broke on both. On this bench a
+reconstruction can't close that gap by asking: the patient hears only the phrasings in
+`docs/hearing-grammar.md`, which has no claim or ceiling question, so the patient never answers
+one. Closing it needs the grammar extended and the instrument refrozen first; then it's an
+improvement claim that needs a paired run.
 
 ## Refusal, hand-off and retries
 

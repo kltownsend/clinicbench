@@ -79,16 +79,25 @@ deterministic parser (`clinicbench/hearing.py`). It reads the reference driver's
 nothing else. That shapes the conversation, not just the labels: a question the parser doesn't
 recognize isn't heard, so the patient doesn't answer it, and what the patient never discloses
 can't be settled. A clinician that phrases things its own way will score worse on tier 1 for
-reasons that are the parser's, not its own. Until the parser's grammar is published as a
-versioned artifact, results for an outside clinician are a test of compatibility with the
-reference's phrasing, not of its architecture.
+reasons that are the parser's, not its own. The phrasings it recognizes are published in
+`docs/hearing-grammar.md`, pinned to the parser's hash. Until a calibrated model hearing ships,
+results for an outside clinician are a test of compatibility with that grammar, not of its
+architecture.
 
 ## Failures
 
-Your clinician going silent past the turn limit (300 seconds), exiting mid-turn, sending something
-that isn't a JSON object, or calling a tool that doesn't exist ends the conversation as
-infrastructure (`infra_error`). It's never scored as a clinician choice, and an unknown tool
-never reaches the store.
+Your clinician going silent past the turn limit, exiting mid-turn, sending something that isn't a
+JSON object, sending more than 200 messages in a turn or a message over 64 KB, or calling a tool
+that doesn't exist ends the conversation as `adapter_error`. That's your clinician's failure: the
+conversation is scored like any other ending and stays in every denominator. An unknown tool
+never reaches the store. Only a failure on the bench's side is `infra_error`.
+
+The turn limit (300 seconds) is one deadline for the whole turn, from the patient's line to your
+reply, however many tool calls you make in between.
+
+The child starts with a scrubbed environment: PATH, a locale, and a temporary HOME and working
+directory that are removed afterwards. Pass anything else it needs, such as a model endpoint's
+key, through `run_external(..., env=...)`.
 
 ## What the bench records about you
 
