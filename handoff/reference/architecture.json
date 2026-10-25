@@ -301,6 +301,20 @@
    ]
   },
   {
+   "id": "dep.workflow-reader",
+   "from": "fr.workflow",
+   "to": "fr.reader-model",
+   "contract_refs": [
+    "closed questions (identity, intent, provider, slot) and identity extraction as JSON; the driver checks every answer against the options it offered"
+   ],
+   "compatibility_state": "supported",
+   "operating_owner": "enterprise",
+   "conditions": [],
+   "evidence_refs": [
+    "evidence.lab029"
+   ]
+  },
+  {
    "id": "dep.driver-tools",
    "from": "fr.workflow",
    "to": "fr.write-check",

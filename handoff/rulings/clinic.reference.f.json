@@ -22,6 +22,16 @@
     "handoff/reference/architecture.json",
     "layer2csite schemas/handoff/v1 at 72c15bc"
    ]
+  },
+  {
+   "id": "ruling.clinic-reference-workflow-reader",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T04:25:19Z",
+   "decision": "Add dep.workflow-reader, from fr.workflow to fr.reader-model, beside the consent judge's edge to the reader.",
+   "reason": "In the three F reference cells the workflow makes 69.5% of the 282,430 reader calls (identity extraction, slot, provider, intent) and the consent judge 30.5%. The package wired the reader only to the consent judge. The reader interprets for the workflow; it doesn't settle a decision, so no placement moves.",
+   "refs": [
+    "handoff/reference/architecture.json"
+   ]
   }
  ]
 }
