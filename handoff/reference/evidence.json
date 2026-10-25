@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "72c15bc61820dbf15bda48afac1d09b5e6347fc9",
+    "commit": "c9ffefbaca4d66eceb35137eea1a68e5801ee5b8",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."

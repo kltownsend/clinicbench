@@ -3,7 +3,7 @@
  "process_id": "clinic.scheduling",
  "sources": {
   "repository": "github.com/kltownsend/clinicbench",
-  "commit": "d5808a3b42093adfee366e245df03c9f2845516d",
+  "commit": "bb4be01f26af9f2d90ab80493324b0588bbb1ddf",
   "contract": {
    "path": "docs/contract.md",
    "sha256": "8f1206a6b9384eb36f2d41eb81dd1c70c679b693430fc00fb370f4cdfbde53c7"
