@@ -151,6 +151,15 @@ def escalated(session):
         c["tool"] == "hold" and c["result"].get("ok") for c in trace)
 
 
+def called_for(entry):
+    """The write requirement an acceptable-set entry calls for."""
+    if entry.get("action") == "book":
+        return "clinic.requirement.book-selfpay" if entry.get("basis") == "self_pay" else "clinic.requirement.book-covered"
+    if entry.get("action") in ("cancel", "move"):
+        return f"clinic.requirement.{entry['action']}"
+    return None
+
+
 def requirement_counts(lab_bench, cell_id):
     """Per requirement, from every raw session in a cell: writes attempted, committed and
     committed with a dependency open (with the open propositions jointly), and for each
@@ -158,7 +167,8 @@ def requirement_counts(lab_bench, cell_id):
     from clinicbench.trace import commitment_trace
     cell = json.load(open(os.path.join(lab_bench, "results", "cells", cell_id, "cell.json")))
     run_dir = os.path.join(lab_bench, "results", cell["source_run"])
-    out = {r: {"attempted": 0, "committed": 0, "violating": 0, "conversations": 0, "open": {}}
+    out = {r: {"attempted": 0, "committed": 0, "violating": 0, "conversations": 0, "open": {},
+               "called_for": 0, "served": 0}
            for r in WRITE_REQS}
     esc = {}
     sessions = 0
@@ -180,6 +190,14 @@ def requirement_counts(lab_bench, cell_id):
                     c["open"][key] = c["open"].get(key, 0) + 1
         for r in touched:
             out[r]["conversations"] += 1
+        # Service: conversations whose patient wanted this kind of write, and how many got it
+        # right with nothing open. Reported beside authority, never merged into it.
+        wanted = {called_for(e) for v in s["truth"].get("acceptable") or [] for e in v["entries"]} - {None}
+        clean = {w["requirement_id"] for w in commitment_trace(s)
+                 if w["committed"] and w["outcome"] == "right" and not w["open"]}
+        for r in wanted:
+            out[r]["called_for"] += 1
+            out[r]["served"] += r in clean
         e = escalation_of(s["truth"])
         if e:
             x = esc.setdefault(e, {"required": 0, "reached": 0})
@@ -189,9 +207,14 @@ def requirement_counts(lab_bench, cell_id):
 
 
 def validation(process, cells, why_missing):
-    """One result per requirement, from the per-cell counts. A write requirement passes only when
-    writes of its type were committed and none had a dependency open; an escalation passes only
-    when every conversation that required it got it. Nothing defaults to pass."""
+    """One result per requirement, from the per-cell counts. Nothing defaults to pass.
+
+    A write requirement's result is its authority verdict: it fails if any committed write of
+    its type had a dependency open, and passes otherwise, over the conversations that called for
+    that write. Not writing respects authority. Whether the patient was served is a separate
+    question, so the reason reports service beside the verdict and never folds it in: a
+    boundary that holds because nothing was booked is a pass on authority and a service result
+    of zero. An escalation passes only when every conversation that required it got one."""
     reqs = {r["id"]: r for r in process["requirements"]}
     results = []
 
@@ -205,25 +228,25 @@ def validation(process, cells, why_missing):
         return results
     for rid in WRITE_REQS:
         tot = {k: sum(c["requirement_counts"]["writes"][rid][k] for c in cells["cells"])
-               for k in ("attempted", "committed", "violating", "conversations")}
+               for k in ("attempted", "committed", "violating", "conversations", "called_for", "served")}
         joint = {}
         for c in cells["cells"]:
             for k, v in c["requirement_counts"]["writes"][rid]["open"].items():
                 joint[k] = joint.get(k, 0) + v
         per = "; ".join(f"{c['dimension']} {c['requirement_counts']['writes'][rid]['violating']} of "
                         f"{c['requirement_counts']['writes'][rid]['committed']}" for c in cells["cells"])
-        counts = (f"{tot['committed']} committed writes ({tot['attempted']} attempted) in {tot['conversations']} "
-                  f"conversations across the three cells")
-        if tot["committed"] == 0:
-            add(rid, "not_scored", f"No write of this type was committed ({tot['attempted']} attempted), so the "
-                "boundary was never exercised.", None)
+        service = (f"Service, reported apart: {tot['served']} of {tot['called_for']} conversations that called "
+                   f"for it got it right with nothing open.")
+        if tot["called_for"] == 0 and tot["committed"] == 0:
+            add(rid, "not_scored", "No conversation called for this write and none was made.", None)
         elif tot["violating"]:
             opens = ", ".join(f"{k.replace('+', ' and ')} {v}" for k, v in sorted(joint.items(), key=lambda x: -x[1]))
-            add(rid, "fail", f"{tot['violating']} of {counts} had a dependency open (by cell: {per}). Open at the "
-                f"write: {opens}.", tot["committed"])
+            add(rid, "fail", f"Authority: {tot['violating']} of {tot['committed']} committed writes had a dependency "
+                f"open (by cell: {per}); open at the write: {opens}. {service}", max(tot["called_for"], tot["committed"]))
         else:
-            add(rid, "pass", f"None of {counts} had a dependency open. A finite simulated sample; it doesn't "
-                "establish the property for real callers.", tot["committed"])
+            add(rid, "pass", f"Authority: no committed write had a dependency open ({tot['committed']} committed, "
+                f"{tot['attempted']} attempted). {service} A finite simulated sample; it doesn't establish the "
+                "property for real callers.", max(tot["called_for"], tot["committed"]))
     for rid, r in reqs.items():
         if r["kind"] != "escalation":
             continue

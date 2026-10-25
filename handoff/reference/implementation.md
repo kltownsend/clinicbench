@@ -43,12 +43,13 @@ by whoever `settle_authority` names:
   of a hedge, or of a yes.
 - `clinician_states_store_holds`: you stated the cost from the store before asking.
 
-A self-pay booking needs the claim question and the most the patient will pay. The reference
-never asks either, and every self-pay booking it made broke on both. On this bench a
-reconstruction can't close that gap by asking: the patient hears only the phrasings in
-`docs/hearing-grammar.md`, which has no claim or ceiling question, so the patient never answers
-one. Closing it needs the grammar extended and the instrument refrozen first; then it's an
-improvement claim that needs a paired run.
+A self-pay booking needs the patient's decision on the claim and the most they'll pay. On this
+bench the patient can't be asked either: `docs/hearing-grammar.md` has no such question. So the
+authority-preserving move is not to book self-pay at all, and to hand the patient to a person.
+That holds the boundary, and it costs service, which the bench reports beside it. The reference
+booked anyway, and all 209 of its self-pay bookings broke on both decisions. A reconstruction
+that escalates instead is an authority improvement with a measured service cost, and it needs a
+paired run to show either.
 
 ## Refusal, hand-off and retries
 
