@@ -7,8 +7,29 @@ clinicbench puts a scheduling agent in conversation with a simulated patient. Th
 (the most they'll pay, the times that work, the doctor they want) is set in code before the call.
 The agent has to draw it out. Every booking is scored against that truth by code.
 
-It's the instrument behind Layer2C Lab 029. The lab's verdicts and results aren't here; the bench is,
-so you can run it on your own stack and reach your own conclusions.
+It's the instrument behind Layer2C Lab 029. The lab's verdicts aren't here; the bench is, so you
+can run it on your own stack and reach your own conclusions. The run records behind every published
+figure are on this repository's `data-v1` release.
+
+## Start from the Clinic
+
+The Clinic is the learning lab built on this bench, at https://labs.layer2c.com/clinic. Its
+walkthrough runs the lab once on the site, against recorded results. This repository is where the
+walkthrough ends. Load the kit on your own infrastructure or the platform you're evaluating, change
+one thing, and it's a learning lab and the base for a proof of concept (PoC).
+
+| Start here | What it's for |
+|---|---|
+| `CHALLENGES.md` | Gaps you can see in the kit as shipped, each with a head start. None is fixed; solving them is yours |
+| `docs/worked-path.md` | One path through the Clinic and what it exposed. Read it after your own attempt |
+| `docs/adapter-contract.md` | Bringing your own clinician, a vendor's platform included, and declaring its isolation |
+| `scripts/fast_loop.py` | All 1,000 patients at every setting of one dimension in about 12 seconds, with no model. It shows where a change breaks things, not how often |
+| The `data-v1` release | Every recorded cell's conversations, one archive per cell, with a manifest of SHA-256 hashes |
+
+A PoC here tests a stack or platform against one use case, clinic scheduling. The patients, the
+scoring and the freeze stay fixed, so compare your change with your own baseline run of the
+reference. Pointing the kit at your own business process means writing your own patients and
+scorer. That's the natural next build, and the kit doesn't do it for you.
 
 ## How a conversation works
 
@@ -57,6 +78,9 @@ The measurement contract (`docs/contract.md`) describes more than this release i
 | Self-test: golden cases, mutations, stub grid | `clinicbench/selftest/` |
 | The measurement contract, frozen by hash | `docs/contract.md`, `docs/contract-changes.md`, `docs/freeze.json` |
 | Serving and gateway configs | `serve/`, `gateway/` |
+| Outside clinicians: the isolation seam, and adversarial examples of why it matters | `clinicbench/external.py`, `examples/adversarial/` |
+| The fast loop | `scripts/fast_loop.py` |
+| How the public contract text differs from Lab 029's | `docs/contract-diff.md` |
 
 The world is a small clinic: 8 patient identities, 6 doctors, 42 slots. The 1,000 patients are
 generated truths over those identities, not 1,000 different records.
@@ -141,6 +165,14 @@ person by calling the hand-off tool. Contract section 9 lists what an adapter mu
 yours next to `adapters/dcitl_f.py`, add it to `ARMS` in `live.py`, and run the self-test's
 adapter checks against stub models first. An agent that writes its own replies needs a model
 hearing, which isn't in this release.
+
+`docs/adapter-contract.md` is the full contract for a clinician from outside, including how to
+declare its isolation and what the bench records about it. Run the fast loop against the reference
+before spending on a model:
+
+```bash
+PYTHONPATH=. python scripts/fast_loop.py --clinician mymod:MyClinician --against f
+```
 
 ## Change the instrument
 
