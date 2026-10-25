@@ -37,12 +37,14 @@ Not in the grammar, so not heard: a question about the claim, a question about t
 patient will pay, and any paraphrase of the lines above.
 
 That makes self-pay a teaching case, not a gap to fill. A self-pay booking depends on two
-decisions only the patient can make, whether to skip the claim and the most they'll pay, and
-this channel can't carry either question. An agent that respects authority has one correct
-move when a decision it needs can't be elicited: don't book, hand the patient to a person. The
-bench scores that as authority respected, and reports its service cost beside it. An agent that
-books anyway has acted on decisions nobody made, and every such write breaks. Lab 029's
-reference did that in all 209 of its self-pay bookings.
+decisions the process gives the patient, whether to skip the claim and the most they'll pay,
+and this channel can't carry either question. So someone else has to decide, or nobody does.
+Either of two intentional answers is legitimate: hand the patient to a person, which keeps the
+decisions with the patient and costs service; or place them elsewhere on purpose, such as a
+clinic policy that never files claims for self-pay, declared as a variant that changes who
+decides. The one answer that isn't a choice is booking anyway, acting on decisions nobody made.
+Every such write breaks. Lab 029's reference did that in all 209 of its self-pay bookings. The
+bench reports authority and service apart, so each choice shows what it costs.
 
 Three more labels the parser never sets, all tier 2 process labels, not authority: a coverage
 question, a good-faith estimate notice, and the cost in a read-back. The checks that read them

@@ -196,7 +196,7 @@
    "mapping_version": "peer-map/functions/layer2.functions.json",
    "required_contract": "decide consent from the patient's own words; a model's reading never settles it",
    "coverage_state": "enterprise_code",
-   "note": "Proposed mapping. The driver's rule is the application's decision and grants no 2C grade to its host."
+   "note": "Ruled mapping (Keith, 2026-10-24). The driver's rule is the application's decision and grants no 2C grade to its host. Every assessed peer of policy-reasoning reads Ceded, so choosing one in place of the driver cedes whether the patient agreed to the vendor. That's a legitimate design when it's declared as a variant deviation, and compare_architectures reports the move either way."
   },
   {
    "id": "fr.write-check",
@@ -235,7 +235,7 @@
    "mapping_version": "peer-map/functions/layer1.functions.json",
    "required_contract": "authoritative reads and conflict-checked writes of slots and appointments",
    "coverage_state": "enterprise_code",
-   "note": "In-process and not durable. Mapped to relational-htap because the requirement is a system of record with conflict-checked writes. The bench tests transaction behavior only as far as a taken slot."
+   "note": "Ruled mapping (Keith, 2026-10-24). In-process and not durable. What the reference needs is the transactional half of relational-htap: an authoritative record with conflict-checked writes. The analytical half isn't required. Layer 1A has no transactional-only system-of-record function; that's raised as a map question in layer2csite. The bench tests transaction behavior only as far as a taken slot."
   },
   {
    "id": "fr.compute",

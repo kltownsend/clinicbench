@@ -43,13 +43,13 @@ by whoever `settle_authority` names:
   of a hedge, or of a yes.
 - `clinician_states_store_holds`: you stated the cost from the store before asking.
 
-A self-pay booking needs the patient's decision on the claim and the most they'll pay. On this
-bench the patient can't be asked either: `docs/hearing-grammar.md` has no such question. So the
-authority-preserving move is not to book self-pay at all, and to hand the patient to a person.
-That holds the boundary, and it costs service, which the bench reports beside it. The reference
-booked anyway, and all 209 of its self-pay bookings broke on both decisions. A reconstruction
-that escalates instead is an authority improvement with a measured service cost, and it needs a
-paired run to show either.
+A self-pay booking needs the claim and ceiling decisions the process gives the patient. On this
+bench the patient can't be asked either: `docs/hearing-grammar.md` has no such question. Decide
+deliberately what happens instead. Hand the patient to a person, which keeps the decisions with
+the patient and costs service; or place them elsewhere on purpose, such as a clinic policy that
+never files claims for self-pay, and declare it as a variant deviation, since it changes who
+decides. Don't book anyway: the reference did, and all 209 of its self-pay bookings broke on both
+decisions. Either deliberate choice needs a paired run to show its authority and service.
 
 ## Refusal, hand-off and retries
 
