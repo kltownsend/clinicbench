@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "57d87984dff9c9ba5e999ebcae1c54db34c7dad3",
+    "commit": "91dbf2704de5e4787334b7850d3acfa9a17ba73d",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -285,5 +285,17 @@
  ],
  "approved_exceptions": [],
  "reconcile_findings": [],
- "human_decisions": []
+ "human_decisions": [
+  {
+   "id": "ruling.clinic-reference-bindings",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T02:04:02Z",
+   "decision": "Role-to-function bindings for clinic.reference.f: fr.write-check unmapped at layer2b; fr.records to layer1a relational-htap; fr.consent-judge stays layer2c policy-reasoning; fr.workflow unmapped at layer3, fr.reader-model layer2b models, fr.reader-engine layer2b inference-engine and fr.compute layer0a deskside as drafted; the five authority bindings and the layer accounting approved as drafted.",
+   "reason": "tool-execution is defined as vendor-side and the reference's tools are the bench's own code; the records requirement is a transactional system of record; policy-reasoning describes the 2C decision Lab 029 placed there and grants the driver's host no grade.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "https://labs.layer2c.com/labs/who-decides-consent"
+   ]
+  }
+ ]
 }

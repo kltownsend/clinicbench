@@ -173,6 +173,8 @@ def main():
         sys.exit("not built:\n  " + "\n  ".join(errors))
 
     process = process_record()
+    rpath = os.path.join(ROOT, "handoff", "rulings", f"{arch['architecture_id']}.json")
+    rulings = json.load(open(rpath))["decisions"] if os.path.exists(rpath) else []
     cells, why = cell_evidence(a.lab_bench)
     labs_commit = git(a.labs, "rev-parse", "HEAD") if os.path.isdir(os.path.join(a.labs, ".git")) else None
     evidence = {
@@ -198,7 +200,7 @@ def main():
                       for sid, c in resolved.items()],
         "approved_exceptions": [],
         "reconcile_findings": [],
-        "human_decisions": [],
+        "human_decisions": rulings,
     }
     validation_rec = {
         "schema_version": "handoff.validation/1",

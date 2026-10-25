@@ -2,7 +2,7 @@
  "schema_version": "handoff.architecture/1",
  "architecture_id": "clinic.reference.f",
  "status": "draft",
- "review": "Every role binding, function requirement and selection here is proposed, for Keith's review. None is an approved instrument judgment.",
+ "review": "Bindings ruled by Keith on 2026-10-25 (evidence.json, human_decisions). The role-to-function bindings and selections are approved instrument judgments for this reference; the package stays a draft because fr.workflow and fr.write-check are unmapped.",
  "description": "The reference designated today: Lab 029's F configuration. Lab 23's code-driven driver, unchanged, decides consent in code (an explicit \"I confirm\" or a yes of four words or fewer). The reader model interprets only what code can't read. Templates supply clinician speech.",
  "dapm": {
   "source": "Lab 029, Authority placement (DAPM)",
@@ -100,7 +100,7 @@
     "reader answers to closed questions"
    ],
    "variant_deviations": [],
-   "status": "proposed"
+   "status": "approved"
   },
   {
    "id": "binding.consent",
@@ -117,7 +117,7 @@
     "the patient's own words matched by code: \"I confirm\", or a yes of four words or fewer"
    ],
    "variant_deviations": [],
-   "status": "proposed"
+   "status": "approved"
   },
   {
    "id": "binding.selfpay-willing",
@@ -131,7 +131,7 @@
     "the patient's own words matched by code"
    ],
    "variant_deviations": [],
-   "status": "proposed"
+   "status": "approved"
   },
   {
    "id": "binding.selfpay-claim-ceiling",
@@ -143,7 +143,7 @@
    "enforcement_point": null,
    "allowed_evidence": [],
    "variant_deviations": [],
-   "status": "proposed",
+   "status": "approved",
    "condition": "The reference never asks either question. Every self-pay booking it made broke on claim and selfpay_max (Lab 029)."
   },
   {
@@ -161,7 +161,7 @@
     "the store's own records: ids, open slots, appointments"
    ],
    "variant_deviations": [],
-   "status": "proposed"
+   "status": "approved"
   }
  ],
  "function_requirements": [
@@ -189,10 +189,11 @@
    "id": "fr.write-check",
    "role_id": "role.write-check",
    "layer_id": "layer2b",
-   "function_id": "tool-execution",
-   "mapping_version": "peer-map/functions/layer2.functions.json",
+   "function_id": null,
+   "mapping_version": null,
    "required_contract": "docs/adapter-contract.md, Tools",
-   "coverage_state": "enterprise_code"
+   "coverage_state": "unmapped",
+   "note": "Enterprise code (enterprise.clinic-tools) with no approved function id. The decision sits at 2B (Lab 029), but layer2b tool-execution is defined as tools running on the vendor's side, and the reference's tools run in the bench's own process. A rebuild that moves the tools to a vendor's sandbox or action engine maps to tool-execution then."
   },
   {
    "id": "fr.reader-model",
@@ -217,11 +218,11 @@
    "id": "fr.records",
    "role_id": "role.records",
    "layer_id": "layer1a",
-   "function_id": "key-value-state",
+   "function_id": "relational-htap",
    "mapping_version": "peer-map/functions/layer1.functions.json",
    "required_contract": "authoritative reads and conflict-checked writes of slots and appointments",
    "coverage_state": "enterprise_code",
-   "note": "In-process and not durable. Transaction semantics aren't tested by the bench beyond a taken slot."
+   "note": "In-process and not durable. Mapped to relational-htap because the requirement is a system of record with conflict-checked writes. The bench tests transaction behavior only as far as a taken slot."
   },
   {
    "id": "fr.compute",
@@ -393,7 +394,6 @@
   }
  ],
  "unresolved": [
-  "Role-to-function bindings are proposed, not reviewed.",
   "The reference fails clinic.requirement.book-selfpay on claim and selfpay_max (Lab 029); see validation.json."
  ]
 }

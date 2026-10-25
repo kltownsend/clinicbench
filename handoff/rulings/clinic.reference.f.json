@@ -1,0 +1,16 @@
+{
+ "about": "Human decisions on the reference package, carried into evidence.json human_decisions by scripts/build_reference.py. Add a ruling here; never edit evidence.json by hand.",
+ "decisions": [
+  {
+   "id": "ruling.clinic-reference-bindings",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T02:04:02Z",
+   "decision": "Role-to-function bindings for clinic.reference.f: fr.write-check unmapped at layer2b; fr.records to layer1a relational-htap; fr.consent-judge stays layer2c policy-reasoning; fr.workflow unmapped at layer3, fr.reader-model layer2b models, fr.reader-engine layer2b inference-engine and fr.compute layer0a deskside as drafted; the five authority bindings and the layer accounting approved as drafted.",
+   "reason": "tool-execution is defined as vendor-side and the reference's tools are the bench's own code; the records requirement is a transactional system of record; policy-reasoning describes the 2C decision Lab 029 placed there and grants the driver's host no grade.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "https://labs.layer2c.com/labs/who-decides-consent"
+   ]
+  }
+ ]
+}
