@@ -53,7 +53,7 @@
   {
    "id": "role.voice",
    "name": "Clinician voice",
-   "responsibility": "Generate the clinician's words",
+   "responsibility": "Word the clinician's line that code chose. In F it decides nothing, so no decision rests on it and it has no function requirement. A variant that lets the voice choose what to ask next has moved a Layer 3 decision, and must bind it and declare the move.",
    "implemented_by": "enterprise.lab23-driver"
   },
   {
