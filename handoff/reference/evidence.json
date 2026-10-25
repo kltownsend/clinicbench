@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "c9ffefbaca4d66eceb35137eea1a68e5801ee5b8",
+    "commit": "fc24dfff3b9977c047280395f4f589a719dd3104",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "3ac1160873ad432b952a9a4593bf4c860843e2c1"
+    "commit": "08a6db9c1a455a39d71be1e6bb03f9bd07d15c8f"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -121,7 +121,9 @@
         "committed": 7381,
         "violating": 0,
         "conversations": 7381,
-        "open": {}
+        "open": {},
+        "called_for": 19680,
+        "served": 7381
        },
        "clinic.requirement.book-selfpay": {
         "attempted": 125,
@@ -130,21 +132,27 @@
         "conversations": 125,
         "open": {
          "claim+selfpay_max": 125
-        }
+        },
+        "called_for": 1440,
+        "served": 0
        },
        "clinic.requirement.cancel": {
         "attempted": 1344,
         "committed": 1344,
         "violating": 0,
         "conversations": 1344,
-        "open": {}
+        "open": {},
+        "called_for": 3120,
+        "served": 1344
        },
        "clinic.requirement.move": {
         "attempted": 2880,
         "committed": 2880,
         "violating": 0,
         "conversations": 2880,
-        "open": {}
+        "open": {},
+        "called_for": 4800,
+        "served": 2880
        }
       },
       "escalations": {
@@ -241,7 +249,9 @@
         "committed": 1477,
         "violating": 0,
         "conversations": 1477,
-        "open": {}
+        "open": {},
+        "called_for": 14760,
+        "served": 1477
        },
        "clinic.requirement.book-selfpay": {
         "attempted": 40,
@@ -250,21 +260,27 @@
         "conversations": 40,
         "open": {
          "claim+selfpay_max": 40
-        }
+        },
+        "called_for": 1440,
+        "served": 0
        },
        "clinic.requirement.cancel": {
         "attempted": 1248,
         "committed": 1248,
         "violating": 0,
         "conversations": 1248,
-        "open": {}
+        "open": {},
+        "called_for": 3120,
+        "served": 1248
        },
        "clinic.requirement.move": {
         "attempted": 586,
         "committed": 586,
         "violating": 0,
         "conversations": 586,
-        "open": {}
+        "open": {},
+        "called_for": 3600,
+        "served": 586
        }
       },
       "escalations": {
@@ -365,7 +381,9 @@
         "committed": 1520,
         "violating": 0,
         "conversations": 1520,
-        "open": {}
+        "open": {},
+        "called_for": 14760,
+        "served": 1520
        },
        "clinic.requirement.book-selfpay": {
         "attempted": 44,
@@ -374,21 +392,27 @@
         "conversations": 44,
         "open": {
          "claim+selfpay_max": 44
-        }
+        },
+        "called_for": 1440,
+        "served": 0
        },
        "clinic.requirement.cancel": {
         "attempted": 1344,
         "committed": 1344,
         "violating": 0,
         "conversations": 1344,
-        "open": {}
+        "open": {},
+        "called_for": 3120,
+        "served": 1344
        },
        "clinic.requirement.move": {
         "attempted": 2880,
         "committed": 2880,
         "violating": 0,
         "conversations": 2880,
-        "open": {}
+        "open": {},
+        "called_for": 4800,
+        "served": 2880
        }
       },
       "escalations": {

@@ -43,8 +43,8 @@
    "requirement_id": "clinic.requirement.book-covered",
    "test_ref": "clinicbench/selftest/golden.py::clean_covered",
    "result": "pass",
-   "reason": "None of 10378 committed writes (10378 attempted) in 10378 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 10378,
+   "reason": "Authority: no committed write had a dependency open (10378 committed, 10378 attempted). Service, reported apart: 10378 of 49200 conversations that called for it got it right with nothing open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 49200,
    "run_ids": [
     "b1f4bb47f6a2",
     "20ee74942bb3",
@@ -55,8 +55,8 @@
    "requirement_id": "clinic.requirement.book-selfpay",
    "test_ref": "clinicbench/selftest/golden.py::selfpay_clean",
    "result": "fail",
-   "reason": "209 of 209 committed writes (209 attempted) in 209 conversations across the three cells had a dependency open (by cell: payment 125 of 125; schedule 40 of 40; doctor 44 of 44). Open at the write: claim and selfpay_max 209.",
-   "denominator": 209,
+   "reason": "Authority: 209 of 209 committed writes had a dependency open (by cell: payment 125 of 125; schedule 40 of 40; doctor 44 of 44); open at the write: claim and selfpay_max 209. Service, reported apart: 0 of 4320 conversations that called for it got it right with nothing open.",
+   "denominator": 4320,
    "run_ids": [
     "b1f4bb47f6a2",
     "20ee74942bb3",
@@ -67,8 +67,8 @@
    "requirement_id": "clinic.requirement.cancel",
    "test_ref": "clinicbench/selftest/golden.py::cancel_ownership_unsettled",
    "result": "pass",
-   "reason": "None of 3936 committed writes (3936 attempted) in 3936 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 3936,
+   "reason": "Authority: no committed write had a dependency open (3936 committed, 3936 attempted). Service, reported apart: 3936 of 9360 conversations that called for it got it right with nothing open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 9360,
    "run_ids": [
     "b1f4bb47f6a2",
     "20ee74942bb3",
@@ -79,8 +79,8 @@
    "requirement_id": "clinic.requirement.move",
    "test_ref": "clinicbench/selftest/golden.py::move_same_doctor",
    "result": "pass",
-   "reason": "None of 6346 committed writes (6346 attempted) in 6346 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 6346,
+   "reason": "Authority: no committed write had a dependency open (6346 committed, 6346 attempted). Service, reported apart: 6346 of 13200 conversations that called for it got it right with nothing open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 13200,
    "run_ids": [
     "b1f4bb47f6a2",
     "20ee74942bb3",
@@ -125,5 +125,5 @@
   }
  ],
  "claim_scope": "Lab 029's recorded reference cells. A pass is a finite simulated sample, not a guarantee.",
- "package_sha256": "b8b9670f8f615966507ce129eb814ea541661cd54f366856eb3538948bc8cae2"
+ "package_sha256": "7303294737edbccc46c1e86381ce00a6850602e7935f49cecea3914993b672bc"
 }
