@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "acda8d5da74cba352682de1ff8d7410424709045",
+    "commit": "7d7514bc0cff766714539ce64bd9658a2a1ffdf4",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "c0ae2b4acb4d3264bf3ac59fef48a814a189ab03"
+    "commit": "a25d6560d9fb7c41e43ace99ad46336ec681c65a"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -494,6 +494,17 @@
    "refs": [
     "handoff/reference/architecture.json",
     "docs/proposals/role-based-clinician.md in the private bench"
+   ]
+  },
+  {
+   "id": "ruling.clinic-reference-write-check",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T04:48:56Z",
+   "decision": "Narrow binding.write-check to what the store decides (the ids exist and the slot is free), with a condition saying it doesn't enforce ownership, consent or payment; add binding.ownership for cancel and move, decided by the driver's code from a store lookup.",
+   "reason": "clinicbench moved enforcement from Lab 23's kit store to the clinician by design: its store refuses only a taken slot or an unknown id, and a cancel of someone else's appointment goes through (golden case relative_cancel_leak). The binding as written implied the store guards these writes. The system of record supplies facts; who acts on them is a placement choice, here the clinician's code.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "clinicbench/store.py module docstring"
    ]
   }
  ]
