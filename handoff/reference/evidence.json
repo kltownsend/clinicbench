@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "22ef68b8b3a1f66f71697bdd234ce4360fa2c82a",
+    "commit": "acda8d5da74cba352682de1ff8d7410424709045",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "b55913df716e24b03b0579182a3b05151cbb7f78"
+    "commit": "c0ae2b4acb4d3264bf3ac59fef48a814a189ab03"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -483,6 +483,17 @@
    "reason": "In the three F reference cells the workflow makes 69.5% of the 282,430 reader calls (identity extraction, slot, provider, intent) and the consent judge 30.5%. The package wired the reader only to the consent judge. The reader interprets for the workflow; it doesn't settle a decision, so no placement moves.",
    "refs": [
     "handoff/reference/architecture.json"
+   ]
+  },
+  {
+   "id": "ruling.clinic-reference-voice",
+   "decided_by": "Keith Townsend",
+   "decided_at": "2026-10-25T04:39:56Z",
+   "decision": "Keep role.voice with no function requirement; its responsibility states that in F it decides nothing, and that a variant letting the voice choose what to ask next moves a Layer 3 decision and must bind and declare it.",
+   "reason": "Wording isn't a decision, and a misstated read-back is already a break the scorer catches. A function requirement would improve the record, not teach authority. The authority in the voice appears only when it gets to choose, which is a learner's variant, not the reference.",
+   "refs": [
+    "handoff/reference/architecture.json",
+    "docs/proposals/role-based-clinician.md in the private bench"
    ]
   }
  ]

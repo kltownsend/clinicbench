@@ -1,18 +1,18 @@
 {
  "schema_version": "handoff.manifest/1",
  "package_id": "clinic.reference.f",
- "created_at": "2026-10-25T04:25:41+00:00",
+ "created_at": "2026-10-25T04:40:20+00:00",
  "status": "draft",
  "parent": null,
  "sources": {
   "clinicbench": {
    "repository": "github.com/kltownsend/clinicbench",
-   "commit": "5915cbc0474f237b046117875937f3fc485f122f",
+   "commit": "4a0c24d5b3bfcff69874d28d5ebdf8dd6d1708ef",
    "dirty": false
   },
   "layer2csite": {
    "repository": "github.com/kltownsend/layer2c-4plus1",
-   "commit": "22ef68b8b3a1f66f71697bdd234ce4360fa2c82a"
+   "commit": "acda8d5da74cba352682de1ff8d7410424709045"
   },
   "labs": {
    "repository": "github.com/kltownsend/layer2c-labs",
@@ -20,11 +20,11 @@
   }
  },
  "files": {
-  "process.json": "9c19ec4520b1c6ba2b8bc6ba596aef2183241f17598ec901ce31bc703e898da2",
-  "architecture.json": "7e6df3e5496de25a933b9133861ccf484c4a3e03ffaa2f8850155c1103047eb5",
-  "evidence.json": "20500ada5098f924ff333baef594958112ea40db446cad95eb8cb59fe864e1de",
+  "process.json": "bd4afd01cab48febb41a4da63b23cc1fce3569ae956f550d9e44c320774f7897",
+  "architecture.json": "b5dd408aad99a285c4e9ca296a229eb2f02e5655ab43fad81ec6622a00931d98",
+  "evidence.json": "5b0f7d5aa477f1737e9b00064b0785a3675053ae6b9ef09d9a1afeeef52e67ee",
   "implementation.md": "90e42a545b95682b7e045406665434e0b1b7b3d4df430c5e7e1d35c3b5577145",
-  "validation.json": "fbbf244d5a1fd72e19711b2a7075e44d80ed0e53eb9f04ecdad9ca59274c61d5"
+  "validation.json": "2a35401392790b1e342f46978f4481d29f83b5d83ad81f5f805e886dca709f0b"
  },
  "replaced_ids": [
   {
