@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "fc24dfff3b9977c047280395f4f589a719dd3104",
+    "commit": "9a8173ddb6474b1605ecb55ae263ac8f354c64c3",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "08a6db9c1a455a39d71be1e6bb03f9bd07d15c8f"
+    "commit": "ee2dedb4b46fc7a63ecf5364beaa26f6a2146d39"
    },
    "freeze": {
     "source_id": "clinic.freeze",
