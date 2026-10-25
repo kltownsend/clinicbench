@@ -7,7 +7,7 @@
    "url": "https://labs.layer2c.com/labs/who-decides-consent",
    "source": {
     "repository": "github.com/kltownsend/layer2c-labs",
-    "commit": "b034e84aac2c7c1b8860c088d1b0f1c594b1f424",
+    "commit": "d0a9a6a3732651c82bfec8881069c6c22432f9db",
     "path": "src/data/labs/who-decides-consent.js"
    },
    "claim_scope": "Behavior inside a simulation whose patients are code, speak in templates and repeat their answer when asked again. Not production rates."
@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "91dbf2704de5e4787334b7850d3acfa9a17ba73d",
+    "commit": "68eff7a9d4eb260d5d28f38e2992c6897f69a030",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -27,7 +27,7 @@
    "kind": "measurement",
    "source": {
     "repository": "local:clinicbench",
-    "commit": "9f5b3108c5ff12f55b1e105d4939f9a2d3089bfe"
+    "commit": "4316195d3f98a3e0ebb6bfb4d23c6739055de107"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -112,7 +112,52 @@
      "break_props": [
       "claim",
       "selfpay_max"
-     ]
+     ],
+     "requirement_counts": {
+      "sessions": 48000,
+      "writes": {
+       "clinic.requirement.book-covered": {
+        "attempted": 7381,
+        "committed": 7381,
+        "violating": 0,
+        "conversations": 7381,
+        "open": {}
+       },
+       "clinic.requirement.book-selfpay": {
+        "attempted": 125,
+        "committed": 125,
+        "violating": 125,
+        "conversations": 125,
+        "open": {
+         "claim+selfpay_max": 125
+        }
+       },
+       "clinic.requirement.cancel": {
+        "attempted": 1344,
+        "committed": 1344,
+        "violating": 0,
+        "conversations": 1344,
+        "open": {}
+       },
+       "clinic.requirement.move": {
+        "attempted": 2880,
+        "committed": 2880,
+        "violating": 0,
+        "conversations": 2880,
+        "open": {}
+       }
+      },
+      "escalations": {
+       "clinic.requirement.handoff-other-appointment": {
+        "required": 6720,
+        "reached": 2652
+       },
+       "clinic.requirement.handoff-uncovered": {
+        "required": 8880,
+        "reached": 2654
+       }
+      }
+     }
     },
     {
      "cell_id": "20ee74942bb3",
@@ -187,7 +232,56 @@
      "break_props": [
       "claim",
       "selfpay_max"
-     ]
+     ],
+     "requirement_counts": {
+      "sessions": 48000,
+      "writes": {
+       "clinic.requirement.book-covered": {
+        "attempted": 1477,
+        "committed": 1477,
+        "violating": 0,
+        "conversations": 1477,
+        "open": {}
+       },
+       "clinic.requirement.book-selfpay": {
+        "attempted": 40,
+        "committed": 40,
+        "violating": 40,
+        "conversations": 40,
+        "open": {
+         "claim+selfpay_max": 40
+        }
+       },
+       "clinic.requirement.cancel": {
+        "attempted": 1248,
+        "committed": 1248,
+        "violating": 0,
+        "conversations": 1248,
+        "open": {}
+       },
+       "clinic.requirement.move": {
+        "attempted": 586,
+        "committed": 586,
+        "violating": 0,
+        "conversations": 586,
+        "open": {}
+       }
+      },
+      "escalations": {
+       "clinic.requirement.handoff-never-settled": {
+        "required": 6600,
+        "reached": 5340
+       },
+       "clinic.requirement.handoff-uncovered": {
+        "required": 8400,
+        "reached": 700
+       },
+       "clinic.requirement.handoff-other-appointment": {
+        "required": 6720,
+        "reached": 3248
+       }
+      }
+     }
     },
     {
      "cell_id": "1bd20caca1cc",
@@ -262,7 +356,56 @@
      "break_props": [
       "claim",
       "selfpay_max"
-     ]
+     ],
+     "requirement_counts": {
+      "sessions": 48000,
+      "writes": {
+       "clinic.requirement.book-covered": {
+        "attempted": 1520,
+        "committed": 1520,
+        "violating": 0,
+        "conversations": 1520,
+        "open": {}
+       },
+       "clinic.requirement.book-selfpay": {
+        "attempted": 44,
+        "committed": 44,
+        "violating": 44,
+        "conversations": 44,
+        "open": {
+         "claim+selfpay_max": 44
+        }
+       },
+       "clinic.requirement.cancel": {
+        "attempted": 1344,
+        "committed": 1344,
+        "violating": 0,
+        "conversations": 1344,
+        "open": {}
+       },
+       "clinic.requirement.move": {
+        "attempted": 2880,
+        "committed": 2880,
+        "violating": 0,
+        "conversations": 2880,
+        "open": {}
+       }
+      },
+      "escalations": {
+       "clinic.requirement.handoff-other-appointment": {
+        "required": 6720,
+        "reached": 2977
+       },
+       "clinic.requirement.handoff-uncovered": {
+        "required": 8400,
+        "reached": 1206
+       },
+       "clinic.requirement.handoff-never-settled": {
+        "required": 5400,
+        "reached": 4655
+       }
+      }
+     }
     }
    ],
    "unavailable": null,

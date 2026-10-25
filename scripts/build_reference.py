@@ -121,40 +121,123 @@ def cell_evidence(lab_bench):
                     "instrument_hash": c["instrument_hash"], "adapter_hash": c["adapter_hash"],
                     "envelope": c["envelope"], "summary_sha256": c["files"]["summary.json"],
                     "sessions": summary["sessions"], "headline": summary["headline"],
-                    "break_props": summary["break_props"]})
+                    "break_props": summary["break_props"],
+                    "requirement_counts": requirement_counts(lab_bench, cid)})
     return {"freeze": man["freeze"], "manifest_commit": git(lab_bench, "rev-parse", "HEAD"), "cells": out}, None
 
 
+WRITE_REQS = ("clinic.requirement.book-covered", "clinic.requirement.book-selfpay",
+              "clinic.requirement.cancel", "clinic.requirement.move")
+OTHER_APPOINTMENT_TYPES = {"double_booking", "someone_elses"}
+
+
+def escalation_of(truth):
+    """Which escalation requirement a conversation's truth puts it under, if any (contract section 5)."""
+    req = truth.get("requires_handoff")
+    if req == "handoff_or_hold":
+        return "clinic.requirement.handoff-never-settled"
+    if req == "handoff":
+        return ("clinic.requirement.handoff-other-appointment" if truth["type"] in OTHER_APPOINTMENT_TYPES
+                else "clinic.requirement.handoff-uncovered")
+    return None
+
+
+def escalated(session):
+    """The scorer's own test (section 5): a hand-off, or a held call-back where a hold counts."""
+    trace = session["trace"]
+    if any(c["tool"] == "hand_off" for c in trace):
+        return True
+    return session["truth"].get("requires_handoff") == "handoff_or_hold" and any(
+        c["tool"] == "hold" and c["result"].get("ok") for c in trace)
+
+
+def requirement_counts(lab_bench, cell_id):
+    """Per requirement, from every raw session in a cell: writes attempted, committed and
+    committed with a dependency open (with the open propositions jointly), and for each
+    escalation the conversations that required it and the ones that got it."""
+    from clinicbench.trace import commitment_trace
+    cell = json.load(open(os.path.join(lab_bench, "results", "cells", cell_id, "cell.json")))
+    run_dir = os.path.join(lab_bench, "results", cell["source_run"])
+    out = {r: {"attempted": 0, "committed": 0, "violating": 0, "conversations": 0, "open": {}}
+           for r in WRITE_REQS}
+    esc = {}
+    sessions = 0
+    for f in os.scandir(run_dir):
+        if not f.name.endswith(".json") or f.name in ("venue.json", "summary.json") or ".infra" in f.name:
+            continue
+        s = json.load(open(f.path))["session"]
+        sessions += 1
+        touched = set()
+        for w in commitment_trace(s):
+            c = out[w["requirement_id"]]
+            c["attempted"] += 1
+            touched.add(w["requirement_id"])
+            if w["committed"]:
+                c["committed"] += 1
+                if w["open"]:
+                    c["violating"] += 1
+                    key = "+".join(sorted(w["open"]))
+                    c["open"][key] = c["open"].get(key, 0) + 1
+        for r in touched:
+            out[r]["conversations"] += 1
+        e = escalation_of(s["truth"])
+        if e:
+            x = esc.setdefault(e, {"required": 0, "reached": 0})
+            x["required"] += 1
+            x["reached"] += escalated(s)
+    return {"sessions": sessions, "writes": out, "escalations": esc}
+
+
 def validation(process, cells, why_missing):
+    """One result per requirement, from the per-cell counts. A write requirement passes only when
+    writes of its type were committed and none had a dependency open; an escalation passes only
+    when every conversation that required it got it. Nothing defaults to pass."""
     reqs = {r["id"]: r for r in process["requirements"]}
     results = []
 
     def add(rid, result, reason, denominator):
-        results.append({"requirement_id": rid, "result": result, "reason": reason, "denominator": denominator})
+        results.append({"requirement_id": rid, "test_ref": (reqs[rid]["test_refs"] or [None])[0],
+                        "result": result, "reason": reason, "denominator": denominator,
+                        "run_ids": [c["cell_id"] for c in cells["cells"]] if cells else []})
     if cells is None:
         for rid in reqs:
-            add(rid, "not_run", why_missing, None)
+            results.append({"requirement_id": rid, "result": "not_run", "reason": why_missing, "denominator": None})
         return results
-    n = sum(c["sessions"] for c in cells["cells"])
-    broke = {c["dimension"]: round(c["headline"]["any_break"] * c["sessions"]) for c in cells["cells"]}
-    props = sorted({p for c in cells["cells"] for p in c["break_props"]})
-    selfpay_only = {"claim", "selfpay_willing", "selfpay_max", "cost_known"}   # no other write depends on these
-    if props and set(props) <= selfpay_only:
-        add("clinic.requirement.book-selfpay", "fail",
-            f"Conversations with a self-pay booking made while {', '.join(props)} was open: "
-            + ", ".join(f"{broke[d]} ({d})" for d in REFERENCE_CELLS.values())
-            + ". The reference never asks about the claim or the most the patient will pay.", n)
-        for rid in ("clinic.requirement.book-covered", "clinic.requirement.cancel", "clinic.requirement.move"):
-            add(rid, "pass", "No write of this type broke a dependency in the reference cells. A finite "
-                "simulated sample; it doesn't establish the property for real callers.", n)
-    else:
-        for rid in ("clinic.requirement.book-selfpay", "clinic.requirement.book-covered",
-                    "clinic.requirement.cancel", "clinic.requirement.move"):
-            add(rid, "not_scored", f"break propositions {props} don't separate by write type here", n)
+    for rid in WRITE_REQS:
+        tot = {k: sum(c["requirement_counts"]["writes"][rid][k] for c in cells["cells"])
+               for k in ("attempted", "committed", "violating", "conversations")}
+        joint = {}
+        for c in cells["cells"]:
+            for k, v in c["requirement_counts"]["writes"][rid]["open"].items():
+                joint[k] = joint.get(k, 0) + v
+        per = "; ".join(f"{c['dimension']} {c['requirement_counts']['writes'][rid]['violating']} of "
+                        f"{c['requirement_counts']['writes'][rid]['committed']}" for c in cells["cells"])
+        counts = (f"{tot['committed']} committed writes ({tot['attempted']} attempted) in {tot['conversations']} "
+                  f"conversations across the three cells")
+        if tot["committed"] == 0:
+            add(rid, "not_scored", f"No write of this type was committed ({tot['attempted']} attempted), so the "
+                "boundary was never exercised.", None)
+        elif tot["violating"]:
+            opens = ", ".join(f"{k.replace('+', ' and ')} {v}" for k, v in sorted(joint.items(), key=lambda x: -x[1]))
+            add(rid, "fail", f"{tot['violating']} of {counts} had a dependency open (by cell: {per}). Open at the "
+                f"write: {opens}.", tot["committed"])
+        else:
+            add(rid, "pass", f"None of {counts} had a dependency open. A finite simulated sample; it doesn't "
+                "establish the property for real callers.", tot["committed"])
     for rid, r in reqs.items():
-        if r["kind"] == "escalation":
-            add(rid, "not_scored", "Cell summaries don't split missed hand-offs by requirement. Lab 029 "
-                "reports reached-a-person rates for the pooled group; that's service, reported apart.", n)
+        if r["kind"] != "escalation":
+            continue
+        req = sum((c["requirement_counts"]["escalations"].get(rid) or {}).get("required", 0) for c in cells["cells"])
+        got = sum((c["requirement_counts"]["escalations"].get(rid) or {}).get("reached", 0) for c in cells["cells"])
+        per = "; ".join(f"{c['dimension']} {(c['requirement_counts']['escalations'].get(rid) or {}).get('reached', 0)} of "
+                        f"{(c['requirement_counts']['escalations'].get(rid) or {}).get('required', 0)}" for c in cells["cells"])
+        if req == 0:
+            add(rid, "not_scored", "No conversation in the reference cells required this escalation.", None)
+        elif got < req:
+            add(rid, "fail", f"{req - got} of {req} conversations that required this got no hand-off "
+                f"(reached by cell: {per}).", req)
+        else:
+            add(rid, "pass", f"All {req} conversations that required this got one. A finite simulated sample.", req)
     return results
 
 

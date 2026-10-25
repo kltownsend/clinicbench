@@ -43,7 +43,7 @@ def test_a_settled_proposition_names_what_settled_it():
 def test_an_open_proposition_has_no_settler():
     t = commitment_trace(CASE["selfpay_claim_open"])[0]
     claim = next(d for d in t["dependencies"] if d["proposition"] == "claim")
-    assert t["open"] == ["claim"] and claim["settled_by"] == [] and not t["authority_respected"]
+    assert t["open"] == ["claim"] and claim["settled_by"] == [] and not t["dependencies_settled"]
 
 
 def _run(adapter):
@@ -64,9 +64,35 @@ def test_under_e_an_always_yes_model_authorizes():
     assert committed and any(t["authorizer"]["kind"] == "model_answer" for t in committed)
 
 
-def test_an_undeclared_adapter_is_unknown_not_guessed():
+def test_an_undeclared_adapter_is_unrecorded_not_guessed():
     s = dict(CASE["selfpay_clean"], stub="someone_elses")
-    assert commitment_trace(s)[0]["authorizer"]["kind"] == "unknown"
+    w = commitment_trace(s)[0]
+    assert w["authorizer"]["kind"] == "unrecorded" and w["authority"]["respected"] is None
+
+
+PATIENT_CONSENT = [{"id": "binding.consent", "requirement_ids": ["clinic.requirement.book-selfpay",
+                    "clinic.requirement.book-covered"], "decision_maker": "patient", "variant_deviations": []}]
+
+
+def test_a_models_yes_under_e_breaks_a_patient_binding():
+    committed = [t for t in commitment_trace(_run(DcitlE), PATIENT_CONSENT) if t["committed"]]
+    model = [t for t in committed if t["authorizer"]["kind"] == "model_answer"]
+    assert model and all(t["authority"]["respected"] is False for t in model)
+
+
+def test_under_f_the_same_binding_holds():
+    committed = [t for t in commitment_trace(_run(DcitlF), PATIENT_CONSENT) if t["committed"]]
+    assert all(t["authority"]["respected"] is True for t in committed)
+
+
+def test_a_recorded_authorization_is_read_not_derived():
+    s = dict(CASE["selfpay_clean"], stub="external")
+    call = next(c for c in s["trace"] if c["tool"] == "book")
+    s["authorizations"] = [{"turn": call["turn"], "before_seq": call["seq"], "tool": "book", "args": call["args"],
+                            "decisions": [{"decision": "consent", "by": "patient_words"}]}]
+    w = commitment_trace(s, PATIENT_CONSENT)[0]
+    assert w["authorizer"]["recorded"] and not w["authorizer"]["derived"]
+    assert w["authorizer"]["kind"] == "patient_words" and w["authority"]["respected"] is True
 
 
 def test_process_record_reads_dependencies_from_the_scorer():

@@ -7,9 +7,14 @@ to a program running in its own process.
 ## What your clinician is
 
 A program that reads one JSON object per line on stdin and writes one per line on stdout. Any
-language works. The bench starts it as a child process for each conversation. Because it runs
-in its own process, it can't see the patient's truth, the dials, the disclosure log or the
-scoring state. Those never leave the bench.
+language works. The bench starts it as a child process for each conversation and sends it only
+the messages below: the patient's lines, tool results and an opaque session id. The patient's
+truth, the dials, the disclosure log and the scoring state are never sent.
+
+That's process separation, not a sandbox. The child runs as the same user, with the same
+filesystem, environment and network, so a clinician that went looking could read the bench's
+own code and results. Measured runs of an outside clinician should run it in a sandbox; the
+contract doesn't provide one.
 
 `examples/minimal_adapter.py` is the smallest one that works. Run it with:
 
@@ -36,6 +41,7 @@ You send, for each turn, any number of tool messages and then exactly one reply:
 |---|---|
 | `{"type": "tool", "id": ..., "tool": "book", "args": {...}}` | calls a clinic tool. The result comes back with your `id` |
 | `{"type": "refuse", "id": ..., "tool": "book", "args": {...}, "reason": "..."}` | logs a refusal by your own enforcement layer, with source `enforcement` |
+| `{"type": "authorize", "tool": "book", "args": {...}, "decisions": [{"decision": "consent", "by": "patient_words", "rule": "...", "evidence": "..."}]}` | records, before a write, what your enforcement layer let it through on. `by` is `code_rule`, `model_answer` or `patient_words`. No reply |
 | `{"type": "reply", "text": "...", "usage": {...} or null}` | your line to the patient. The turn ends here |
 
 ## Tools
@@ -70,9 +76,12 @@ model's reading of a hedge.
 
 Until a calibrated model hearing ships, the patient hears your reply through the bench's
 deterministic parser (`clinicbench/hearing.py`). It reads the reference driver's phrasings and
-nothing else. A clinician that phrases a consent question its own way will get an answer, but the
-patient won't have heard a consent question, and tier 2's process labels will say so. Use the
-parser's phrasings if you want the patient to hear you the way it hears the reference.
+nothing else. That shapes the conversation, not just the labels: a question the parser doesn't
+recognize isn't heard, so the patient doesn't answer it, and what the patient never discloses
+can't be settled. A clinician that phrases things its own way will score worse on tier 1 for
+reasons that are the parser's, not its own. Until the parser's grammar is published as a
+versioned artifact, results for an outside clinician are a test of compatibility with the
+reference's phrasing, not of its architecture.
 
 ## Failures
 
@@ -81,9 +90,13 @@ that isn't a JSON object, or calling a tool that doesn't exist ends the conversa
 infrastructure (`infra_error`). It's never scored as a clinician choice, and an unknown tool
 never reaches the store.
 
-## What the bench derives about you
+## What the bench records about you
 
 The commitment trace (`clinicbench/trace.py`) reports, for each write, which propositions were
-open and what settled the rest. It also reports what authorized the write. For the reference
-adapters it derives that from their declared consent rule and the model answers they logged. For
-yours it says `unknown`. The bench doesn't take a clinician's word for its own authorization.
+open and what settled the rest (`dependencies_settled`). It also reports what authorized the
+write. If you sent `authorize` before the write, the trace reads it: it's your own declaration,
+logged ahead of the effect, which the bench can't verify from inside your process. If you
+didn't, the write is `unrecorded`. Given a package's authority bindings, the trace checks the
+authorizer against them (`authority`): a model's yes on a decision a binding gives the patient
+isn't respected. For the reference adapters, which predate `authorize`, the authorizer is derived
+by running the driver's own rule on the patient's words at the write.

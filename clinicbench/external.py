@@ -15,7 +15,16 @@ Bench to clinician:
 Clinician to bench, any number of tool messages per turn, then exactly one reply:
     {"type": "tool", "id": any, "tool": str, "args": {...}}
     {"type": "refuse", "id": any, "tool": str, "args": {...}, "reason": str}
+    {"type": "authorize", "tool": str, "args": {...}, "decisions": [{"decision": str, "by": str, ...}]}
     {"type": "reply", "text": str, "usage": {...} | null}
+
+`authorize` records, before a write, what the clinician's own enforcement layer let it through
+on: for each decision, `by` is code_rule, model_answer or patient_words. It gets no reply. The
+bench logs it ahead of the write and the commitment trace reads it; it's the clinician's own
+declaration, not something the bench can verify. A write with no `authorize` is unrecorded.
+
+The session id the clinician sees is opaque: the bench's own ids carry the patient's type and
+the dial settings, and those never leave the bench.
 
 A clinician that breaks the protocol, goes silent past the turn limit or exits mid-turn raises,
 and the session records it as infrastructure (contract section 9), never as a clinician choice.
@@ -27,22 +36,25 @@ import json
 import queue
 import subprocess
 import threading
+import uuid
 
 from .records import TURN_TIME_LIMIT_S
 from .session import run_session
 
 CONTRACT = "clinicbench.adapter/1"
+AUTHORIZED_BY = {"code_rule", "model_answer", "patient_words"}
 
 
 class RestrictedTools:
     """The clinic's tools and nothing else: no store, no disclosure log, no trace."""
 
-    __slots__ = ("_call", "_refuse", "_turn")
+    __slots__ = ("_call", "_refuse", "_turn", "_seq")
 
     def __init__(self, api):
         object.__setattr__(self, "_call", lambda tool, args: getattr(api, tool)(**args))
         object.__setattr__(self, "_refuse", api.refuse)
         object.__setattr__(self, "_turn", lambda: api.turn)
+        object.__setattr__(self, "_seq", lambda: len(api.trace))
 
     TOOLS = ("find_patient", "check_coverage", "list_slots", "book", "cancel", "move", "hold", "hand_off")
 
@@ -59,6 +71,10 @@ class RestrictedTools:
     @property
     def turn(self):
         return self._turn()
+
+    @property
+    def next_seq(self):
+        return self._seq()
 
     def __setattr__(self, name, value):
         raise AttributeError("RestrictedTools is read-only")
@@ -79,7 +95,8 @@ class ExternalClinician:
         self.lines: queue.Queue = queue.Queue()
         threading.Thread(target=self._pump, daemon=True).start()
         self.model = None
-        self._send({"type": "start", "contract": CONTRACT, "session_id": session_id,
+        self.authorizations: list[dict] = []
+        self._send({"type": "start", "contract": CONTRACT, "session_id": uuid.uuid4().hex,
                     "tools": list(RestrictedTools.TOOLS)})
 
     def _pump(self):
@@ -119,9 +136,24 @@ class ExternalClinician:
                 result = self.tools.call(msg.get("tool"), msg.get("args") or {})
             elif kind == "refuse":
                 result = self.tools.refuse(msg.get("tool"), msg.get("args") or {}, msg.get("reason", ""))
+            elif kind == "authorize":
+                self.authorizations.append(self._authorization(msg))
+                continue
             else:
                 raise ProtocolError(f"unexpected message type {kind!r}")
             self._send({"type": "tool_result", "id": msg.get("id"), "result": result})
+
+    def _authorization(self, msg):
+        decisions = msg.get("decisions")
+        if msg.get("tool") not in ("book", "cancel", "move") or not isinstance(msg.get("args"), dict):
+            raise ProtocolError("authorize names a write tool and its arguments")
+        if not isinstance(decisions, list) or not decisions or not all(
+                isinstance(d, dict) and d.get("by") in AUTHORIZED_BY and isinstance(d.get("decision"), str)
+                for d in decisions):
+            raise ProtocolError(f"authorize decisions need a decision and a by in {sorted(AUTHORIZED_BY)}")
+        return {"turn": self.tools.turn, "before_seq": self.tools.next_seq, "tool": msg["tool"],
+                "args": msg["args"], "decisions": [{k: d[k] for k in ("decision", "by", "rule", "evidence") if k in d}
+                                                   for d in decisions]}
 
     def close(self):
         if self.proc.poll() is None:
@@ -144,7 +176,9 @@ def run_external(truth, dials, cmd, session_id, hearing):
         made.append(ExternalClinician(cmd, RestrictedTools(api), session_id))
         return made[0]
     try:
-        return run_session(truth, dials, make, session_id, hearing=hearing)
+        s = run_session(truth, dials, make, session_id, hearing=hearing)
+        s["authorizations"] = made[0].authorizations if made else []
+        return s
     finally:
         for c in made:
             c.close()

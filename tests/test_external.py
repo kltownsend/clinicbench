@@ -120,3 +120,31 @@ send({'type': 'reply', 'text': 'staff will follow up with you directly.'})
     s = session(script(tmp_path, body))
     ref = [c for c in s["trace"] if c["tool"] == "book"][0]
     assert ref["result"]["source"] == "enforcement" and not ref["store_changed"]
+
+
+def test_the_session_id_the_clinician_sees_is_opaque(tmp_path):
+    session(script(tmp_path, "send({'type': 'reply', 'text': 'Okay.'})"))
+    start = next(m for m in seen(tmp_path) if m["type"] == "start")
+    assert "selfpay" not in start["session_id"] and "|" not in start["session_id"] and len(start["session_id"]) == 32
+
+
+def test_an_authorization_is_recorded_before_the_write(tmp_path):
+    body = """
+send({'type': 'authorize', 'tool': 'book', 'args': {'patient_id': 'P1', 'slot_id': 'S10', 'basis': 'self_pay'},
+      'decisions': [{'decision': 'consent', 'by': 'patient_words', 'rule': 'explicit yes'}]})
+tool(1, 'book', patient_id='P1', slot_id='S10', basis='self_pay')
+tool(2, 'hand_off', reason='done')
+send({'type': 'reply', 'text': 'staff will follow up with you directly.'})
+"""
+    s = session(script(tmp_path, body))
+    from clinicbench.trace import commitment_trace
+    a = s["authorizations"][0]
+    book = next(c for c in s["trace"] if c["tool"] == "book")
+    assert a["before_seq"] == book["seq"] and a["decisions"][0]["by"] == "patient_words"
+    assert commitment_trace(s)[0]["authorizer"]["recorded"]
+
+
+def test_a_malformed_authorization_is_infrastructure(tmp_path):
+    body = "send({'type': 'authorize', 'tool': 'book', 'args': {}, 'decisions': [{'decision': 'x', 'by': 'vibes'}]})"
+    s = session(script(tmp_path, body))
+    assert s["end"]["reason"] == "infra_error" and "authorize" in s["end"]["error"]

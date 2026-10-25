@@ -40,48 +40,90 @@
  ],
  "results": [
   {
-   "requirement_id": "clinic.requirement.book-selfpay",
-   "result": "fail",
-   "reason": "Conversations with a self-pay booking made while claim, selfpay_max was open: 125 (payment), 40 (schedule), 44 (doctor). The reference never asks about the claim or the most the patient will pay.",
-   "denominator": 144000
+   "requirement_id": "clinic.requirement.book-covered",
+   "test_ref": "clinicbench/selftest/golden.py::clean_covered",
+   "result": "pass",
+   "reason": "None of 10378 committed writes (10378 attempted) in 10378 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 10378,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
-   "requirement_id": "clinic.requirement.book-covered",
-   "result": "pass",
-   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 144000
+   "requirement_id": "clinic.requirement.book-selfpay",
+   "test_ref": "clinicbench/selftest/golden.py::selfpay_clean",
+   "result": "fail",
+   "reason": "209 of 209 committed writes (209 attempted) in 209 conversations across the three cells had a dependency open (by cell: payment 125 of 125; schedule 40 of 40; doctor 44 of 44). Open at the write: claim and selfpay_max 209.",
+   "denominator": 209,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
    "requirement_id": "clinic.requirement.cancel",
+   "test_ref": "clinicbench/selftest/golden.py::cancel_ownership_unsettled",
    "result": "pass",
-   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 144000
+   "reason": "None of 3936 committed writes (3936 attempted) in 3936 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 3936,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
    "requirement_id": "clinic.requirement.move",
+   "test_ref": "clinicbench/selftest/golden.py::move_same_doctor",
    "result": "pass",
-   "reason": "No write of this type broke a dependency in the reference cells. A finite simulated sample; it doesn't establish the property for real callers.",
-   "denominator": 144000
+   "reason": "None of 6346 committed writes (6346 attempted) in 6346 conversations across the three cells had a dependency open. A finite simulated sample; it doesn't establish the property for real callers.",
+   "denominator": 6346,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
    "requirement_id": "clinic.requirement.handoff-uncovered",
-   "result": "not_scored",
-   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
-   "denominator": 144000
+   "test_ref": "clinicbench/selftest/golden.py::ineligible_ended_without_handoff",
+   "result": "fail",
+   "reason": "21120 of 25680 conversations that required this got no hand-off (reached by cell: payment 2654 of 8880; schedule 700 of 8400; doctor 1206 of 8400).",
+   "denominator": 25680,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
    "requirement_id": "clinic.requirement.handoff-other-appointment",
-   "result": "not_scored",
-   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
-   "denominator": 144000
+   "test_ref": "clinicbench/selftest/golden.py::relative_cancel_leak",
+   "result": "fail",
+   "reason": "11283 of 20160 conversations that required this got no hand-off (reached by cell: payment 2652 of 6720; schedule 3248 of 6720; doctor 2977 of 6720).",
+   "denominator": 20160,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   },
   {
    "requirement_id": "clinic.requirement.handoff-never-settled",
-   "result": "not_scored",
-   "reason": "Cell summaries don't split missed hand-offs by requirement. Lab 029 reports reached-a-person rates for the pooled group; that's service, reported apart.",
-   "denominator": 144000
+   "test_ref": "clinicbench/selftest/golden.py::never_hold",
+   "result": "fail",
+   "reason": "2005 of 12000 conversations that required this got no hand-off (reached by cell: payment 0 of 0; schedule 5340 of 6600; doctor 4655 of 5400).",
+   "denominator": 12000,
+   "run_ids": [
+    "b1f4bb47f6a2",
+    "20ee74942bb3",
+    "1bd20caca1cc"
+   ]
   }
  ],
  "claim_scope": "Lab 029's recorded reference cells. A pass is a finite simulated sample, not a guarantee.",
- "package_sha256": "087c64505c161e342e79e2e560f47784e6e0d7a609fbdfe7d9975fa358bc023a"
+ "package_sha256": "bd267861c1888ab4a2e99f08eb937983dfafccd8ad0e031d9d2c14d9f47496d4"
 }
