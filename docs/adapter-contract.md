@@ -100,6 +100,14 @@ directory that are removed afterwards. Pass anything else it needs, such as a mo
 key, through `run_external(..., env=...)`. The child gets its own process group, and closing
 the session ends the whole group, so nothing the clinician started outlives the conversation.
 
+## The fast loop
+
+Before you spend a model run, `scripts/fast_loop.py` runs your clinician against all 1,000 patients at every setting of one dimension, 48,000 conversations, with a stub reader in place of the model. It takes about 12 seconds on a laptop. A clinician here is a Python class built as `Cls(api, model)`, like `clinicbench/adapters/dcitl_f.py`; subclassing `DcitlF` is the quickest way to change one thing.
+
+    PYTHONPATH=. python scripts/fast_loop.py --clinician mymod:MyClinician --against f
+
+A stub reader isn't a model, so the fast loop shows where a change breaks things, not how often. The stub `unclear` never says yes; `yes` always does, which is how to see what a model's yes would do. For rates, run your clinician through this contract with your own model.
+
 ## Isolation
 
 Where the boundary around your clinician sits is a placement decision, like where consent is
