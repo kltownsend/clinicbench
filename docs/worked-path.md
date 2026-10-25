@@ -4,7 +4,7 @@ Draft, 2026-10-25. Read this after your own attempt, not before. It's one path t
 
 The bench is how you know whether you improved anything. This is how you can compare your path with someone else's.
 
-The figures here are reported by the authors. As with Lab 029, this repository publishes the instrument, and the run records and analysis scripts behind the figures stay with the lab. You can reproduce the kind of result here on your own stack. You can't re-derive these exact numbers from this repository.
+The run records behind every figure here are released with the kit, one archive per cell, on this repository's `data-v1` release, with a manifest of SHA-256 hashes. The offline count's script is `scripts/turned_down_yeses.py` in the same release.
 
 ## Where we started
 
@@ -20,17 +20,25 @@ One caution we wrote down before running it: the rule was written from lines in 
 
 We started F2 on the full payment set, 48,000 conversations, and checked it against F on the same patients when 7,448 had finished. That's an interim prefix, not a full run:
 
-| Outcome | F | F2 |
+Every one of the 7,448 conversations ends in exactly one of these:
+
+| How the conversation ended | F | F2 |
 |---|---|---|
-| Right | 1,838 | 2,700 |
-| Right, with no dependency left open | 1,811 | 2,670 |
-| Correctly no write | 736 | 737 |
-| No write | 1,932 | 1,098 |
-| Gave up | 1,602 | 1,536 |
-| Missed a hand-off | 1,340 | 1,339 |
-| **Wrong** | **0** | **38** |
-| Writes with consent left open | 0 | 0 |
-| Breaking writes | 27 | 30, all self-pay |
+| Right write | 1,838 | 2,700 |
+| Correctly no write (a person was reached, or nothing was needed) | 736 | 737 |
+| Wanted a write, none made | 1,932 | 1,098 |
+| Patient gave up | 1,602 | 1,536 |
+| Needed a person, turned away | 1,340 | 1,339 |
+| **Wrong write** | **0** | **38** |
+| Total | 7,448 | 7,448 |
+
+And, counted separately, across the same conversations:
+
+| Diagnostic | F | F2 |
+|---|---|---|
+| Right writes with no dependency left open (part of "right write") | 1,811 | 2,670 |
+| Writes with the patient's consent left open | 0 | 0 |
+| Writes with any dependency left open | 27 | 30, all self-pay |
 
 In that prefix, clean bookings rose by about half, and consent never broke. Then 38 conversations had a wrong write, where F had none. F's two wrong writes on payment fall outside the prefix.
 

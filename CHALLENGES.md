@@ -12,7 +12,7 @@ Some gaps only appear once you change something. Those aren't listed here. We fo
 
 ## How a challenge gets solved here
 
-Fork the frozen kit, change what you think needs changing, and measure it. The fast loop (`scripts/fast_loop.py`) runs the whole patient set against your change in seconds, with no model, and shows where it breaks things. Then measure it for real through the adapter contract (`docs/adapter-contract.md`). The bench tells you whether you improved anything. It scores every conversation against what the patient actually wanted, and reports authority and service apart against the reference on the same patients. Report what improved, what broke and what you found next. Expect the last one.
+Fork the frozen kit, change what you think needs changing, and measure it. The fast loop (`scripts/fast_loop.py`) runs the whole patient set against your change in seconds, with no model, and shows where it breaks things. Then measure it for real through the adapter contract (`docs/adapter-contract.md`). The bench tells you which measured outcomes changed, against the reference on the same patients. It scores every conversation against what the patient actually wanted, and reports authority and service apart. Report what improved, what broke and the next gap you found.
 
 A change to the instrument itself (the patient, the hearing, the scorer, the contract) is the project owner's decision. It's made when there's enough agreement that a gap is material. A material fix mints a new freeze, which changes what every earlier result can be compared with, so it isn't made lightly. Everything else is open.
 
