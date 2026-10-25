@@ -17,7 +17,7 @@
    "kind": "instrument",
    "source": {
     "repository": "github.com/kltownsend/layer2c-4plus1",
-    "commit": "be0abe550112e8cd610742819e3efa71bf5196ad",
+    "commit": "57d87984dff9c9ba5e999ebcae1c54db34c7dad3",
     "path": "peer-map/functions/"
    },
    "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."
@@ -26,8 +26,8 @@
    "id": "evidence.reference-cells",
    "kind": "measurement",
    "source": {
-    "bench": "Lab 029 private bench",
-    "commit": "aa742c0013b410749f8bf1bd6ce7a04cd01442b0"
+    "repository": "local:clinicbench",
+    "commit": "9f5b3108c5ff12f55b1e105d4939f9a2d3089bfe"
    },
    "freeze": {
     "source_id": "clinic.freeze",
@@ -272,14 +272,18 @@
  "offerings": [
   {
    "selection_id": "selection.reader-model",
+   "offering_id": "huggingface.2b.open-weights-under-their-owners-restrictive",
    "component": "Open Weights Under Their Owners' Restrictive Terms (Llama and Gemma Community Licenses, Revenue-Capped and Non-Commercial Releases) Distributed Through the Hub",
    "dapm": "Ceded"
   },
   {
    "selection_id": "selection.compute",
+   "offering_id": "nvidia.0a.dgx-spark",
    "component": "DGX Spark (Deskside)",
    "dapm": "Retained"
   }
  ],
+ "approved_exceptions": [],
+ "reconcile_findings": [],
  "human_decisions": []
 }

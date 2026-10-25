@@ -87,3 +87,22 @@ def test_the_package_carries_no_hidden_patient_state():
     text = "".join(open(os.path.join(PKG, f)).read() for f in FILES)
     for hidden in ('"acceptable"', '"dials"', '"propositions"', '"truth"'):
         assert hidden not in text
+
+
+def test_validation_binds_the_package_it_validates():
+    man, v = load("manifest.json"), load("validation.json")
+    lines = "".join(f"{man['files'][f]}  {f}\n" for f in sorted(man["files"]) if f != "validation.json")
+    assert hashlib.sha256(lines.encode()).hexdigest() == v["package_sha256"]
+
+
+def test_selections_carry_durable_offering_ids():
+    arch = load("architecture.json")
+    for s in arch["selections"]:
+        assert s["offering_id"] and "#" not in s["offering_id"], s["id"]
+        assert s["assessment_version"] and len(s["assessment_version"]) == 40
+        assert s["offering_ref"]["commit"]
+    for f in arch["function_requirements"]:
+        if f["function_id"] is None:
+            assert f["coverage_state"] == "unmapped" and arch["status"] == "draft", f["id"]
+    ev = load("evidence.json")
+    assert ev["approved_exceptions"] == [] and ev["reconcile_findings"] == []

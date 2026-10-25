@@ -64,13 +64,28 @@ def function_ids(l2c, commit):
     return out
 
 
-def resolve_offering(l2c, commit, ref):
-    row = json.loads(git(l2c, "show", f"{commit}:src/data/vendors/{ref['vendor']}.json"))
-    layer = next(L for L in row["layers"] if L["id"] == ref["layer_id"])
+def _layer(l2c, commit, vendor, layer_id):
+    row = json.loads(git(l2c, "show", f"{commit}:src/data/vendors/{vendor}.json"))
+    return next(L for L in row["layers"] if L["id"] == layer_id).get("components") or []
+
+
+def resolve_offering(l2c, commit, sel):
+    """The selection's durable id must exist at its assessment version, on the same row and layer,
+    and its positional reference must name the same component at the reference's own commit."""
+    ref = sel["offering_ref"]
+    comps = _layer(l2c, ref.get("commit") or commit, ref["vendor"], ref["layer_id"])
     i = int(ref["positional"].split("#")[1])
-    comp = (layer.get("components") or [])[i] if i < len(layer.get("components") or []) else None
-    if not comp or not comp["component"].startswith(ref["name_prefix"]):
-        return None, f"{ref['positional']} at {ref['layer_id']} isn't '{ref['name_prefix']}...' at {commit[:12]}"
+    old = comps[i] if i < len(comps) else None
+    if not old or not old["component"].startswith(ref["name_prefix"]):
+        return None, f"{ref['positional']} at {ref['layer_id']} isn't '{ref['name_prefix']}...'"
+    if not sel.get("offering_id"):
+        return None, "no offering_id"
+    now = _layer(l2c, sel["assessment_version"], ref["vendor"], ref["layer_id"])
+    comp = next((c for c in now if c.get("id") == sel["offering_id"]), None)
+    if comp is None:
+        return None, f"{sel['offering_id']} isn't on {ref['vendor']} {ref['layer_id']} at {sel['assessment_version'][:12]}"
+    if comp["component"] != old["component"]:
+        return None, f"{sel['offering_id']} names a different component than {ref['positional']}"
     return comp, None
 
 
@@ -82,7 +97,7 @@ def check_architecture(arch, l2c, commit):
             errors.append(f"{fr['id']}: {fr['layer_id']} has no function {fr['function_id']!r}")
     resolved = {}
     for s in arch["selections"]:
-        comp, err = resolve_offering(l2c, commit, s["offering_ref"])
+        comp, err = resolve_offering(l2c, commit, s)
         if err:
             errors.append(f"{s['id']}: {err}")
         else:
@@ -173,14 +188,16 @@ def main():
                         "path": "peer-map/functions/"},
              "claim_scope": "Function ids and peer membership; no grade is implied by a mapping."},
             {"id": "evidence.reference-cells", "kind": "measurement",
-             "source": {"bench": "Lab 029 private bench", "commit": cells["manifest_commit"] if cells else None},
+             "source": {"repository": "local:clinicbench", "commit": cells["manifest_commit"] if cells else None},
              "freeze": cells["freeze"] if cells else None,
              "cells": cells["cells"] if cells else [],
              "unavailable": None if cells else why,
              "claim_scope": "The reference designated today: F with Gemma on the entire set, one run per cell."},
         ],
-        "offerings": [{"selection_id": sid, "component": c["component"], "dapm": c.get("dapm")}
+        "offerings": [{"selection_id": sid, "offering_id": c["id"], "component": c["component"], "dapm": c.get("dapm")}
                       for sid, c in resolved.items()],
+        "approved_exceptions": [],
+        "reconcile_findings": [],
         "human_decisions": [],
     }
     validation_rec = {
@@ -196,10 +213,17 @@ def main():
         "claim_scope": "Lab 029's recorded reference cells. A pass is a finite simulated sample, not a guarantee.",
     }
 
+    def package_sha(blobs):
+        """sha256 over "<hex>  <path>" lines, sorted, for every file but validation.json."""
+        lines = "".join(f"{sha(blobs[f])}  {f}\n" for f in sorted(FILES) if f != "validation.json")
+        return sha(lines.encode())
+
     blobs = {"process.json": dump(process),
              "architecture.json": open(os.path.join(OUT, "architecture.json"), "rb").read(),
              "evidence.json": dump(evidence), "validation.json": dump(validation_rec),
              "implementation.md": open(os.path.join(OUT, "implementation.md"), "rb").read()}
+    validation_rec["package_sha256"] = package_sha(blobs)
+    blobs["validation.json"] = dump(validation_rec)
     manifest = {
         "schema_version": "handoff.manifest/1",
         "package_id": arch["architecture_id"],
@@ -213,6 +237,10 @@ def main():
             "labs": {"repository": "github.com/kltownsend/layer2c-labs", "commit": labs_commit},
         },
         "files": {f: sha(blobs[f]) for f in FILES},
+        "replaced_ids": [{"original": f"{s['offering_ref']['positional']} ({s['offering_ref']['layer_id']})",
+                          "replacement": s["offering_id"],
+                          "via": f"layer2csite peer-map/id-migration.json at {s['assessment_version'][:7]}"}
+                         for s in arch["selections"]],
     }
     for f in ("process.json", "evidence.json", "validation.json"):
         open(os.path.join(OUT, f), "wb").write(blobs[f])
