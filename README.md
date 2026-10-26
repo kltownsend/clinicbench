@@ -15,22 +15,29 @@ figure are on this repository's `data-v1` release.
 
 The Clinic is the learning lab built on this bench, at https://labs.layer2c.com/clinic. Its
 walkthrough runs the lab once on the site, against recorded results. This repository is where the
-walkthrough ends. The kit is a ready-made proof of concept (PoC). Run it on your own solution, or
-take it to your vendor and ask them to run it on theirs, behind the adapter contract. Make the
-change that matters to you, and it's a learning lab as well.
+runnable steps continue. What travels is the framework, as a ready-made proof of concept (PoC): the
+reference architecture package in `handoff/reference/` writes down the process, its declared
+decisions and the known gaps. The PoC proves whether a target stack can hold each decision where you
+place it: the vendor shows you the decision, allows a runtime override, and names who answers for it.
+Your map proposes the placements, and the vendor's evidence, or a run, settles them. The bench here is
+the reference evidence. Running it on your stack is the optional last step: run the reference, change
+one thing, and compare with your own baseline.
 
 | Start here | What it's for |
 |---|---|
+| `handoff/reference/` | The reference architecture package: the process, its declared decisions and known gaps, the roles, and the bench runs behind them |
 | `CHALLENGES.md` | Gaps you can see in the kit as shipped, each with a head start. None is fixed; solving them is yours |
 | `docs/worked-path.md` | One path through the Clinic and what it exposed. Read it after your own attempt |
 | `docs/adapter-contract.md` | Bringing your own clinician, a vendor's platform included, and declaring its isolation |
 | `scripts/fast_loop.py` | All 1,000 patients at every setting of one dimension in about 12 seconds, with no model. It shows where a change breaks things, not how often |
 | The `data-v1` release | Every recorded cell's conversations, one archive per cell, with a manifest of SHA-256 hashes |
 
-A PoC here tests a stack or platform against one use case, clinic scheduling. The patients, the
-scoring and the freeze stay fixed, so compare your change with your own baseline run of the
-reference. Pointing the kit at your own business process means writing your own patients and
-scorer. That's the natural next build, and the kit doesn't do it for you.
+A bench run here tests a stack against one use case, clinic scheduling. The patients, the scoring
+and the freeze stay fixed, so compare your change with your own baseline run of the reference. The
+simulated patient understands only the reference agent's phrasings, so for a free-form agent a run
+tests that grammar, not its architecture. The records can describe other architectures, but the
+reference's results stay limited to this simulation. Pointing the framework at your own business process means writing your own process and decisions in the same records, and,
+to bench it, your own patients and scorer. The kit doesn't do that for you.
 
 ## How a conversation works
 
