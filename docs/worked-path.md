@@ -4,7 +4,7 @@ Draft, 2026-10-25. Read this after your own attempt, not before. It's one path t
 
 The bench is how you know whether you improved anything. This is how you can compare your path with someone else's.
 
-The run records behind every figure here are released with the kit, one archive per cell, on this repository's `data-v1` release, with a manifest of SHA-256 hashes. The offline count's script is `scripts/turned_down_yeses.py` in the same release.
+The run records behind every figure here are released with the kit, one archive per cell, on this repository's `data-v2` release, with a manifest of SHA-256 hashes. The offline count's script is `scripts/turned_down_yeses.py` in the same release.
 
 ## Where we started
 
