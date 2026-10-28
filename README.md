@@ -80,7 +80,7 @@ The measurement contract (`docs/contract.md`) describes more than this release i
 | Patient behavior and voice | `policy.py`, `voice.py` |
 | Tools, session loop, scorer | `store.py`, `session.py`, `scorer.py` |
 | Plain-language reasons for a wrong booking | `explain.py` |
-| Adapters: a code-driven driver with two consent rules (F, E) | `adapters/dcitl_port.py`, `dcitl_f.py` |
+| Adapters: a code-driven driver with two consent rules, Code decides (F) and Model decides (E) | `adapters/dcitl_port.py`, `dcitl_f.py` |
 | Few-shot reader prompt | `fewshot_model.py`, `fewshot/` |
 | Runner with gates; cell summarizer | `live.py`, `cells.py`, `scripts/summarize.py` |
 | Self-test: golden cases, mutations, stub grid | `clinicbench/selftest/` |
