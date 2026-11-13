@@ -9,9 +9,9 @@ The agent has to draw it out. Every booking is scored against that truth by code
 
 It's the instrument behind Layer2C Lab 029. The lab's verdicts aren't here; the bench is, so you
 can run it on your own stack and reach your own conclusions. The run records behind every published
-figure are on this repository's `data-v2`, `data-v3` and `data-v4` releases: data-v2 holds Lab 029's
-28 cells, data-v3 adds the 18 Jev and Bivia cells behind Lab 030, and data-v4 adds Gemma's and
-Haiku's eight cells with the examples on doctor and schedule.
+figure are on this repository's `data-v2` through `data-v5` releases: data-v2 holds Lab 029's 28
+cells, data-v3 adds the 18 Jev and Bivia cells behind Lab 030, data-v4 adds Gemma's and Haiku's
+eight cells with the examples on doctor and schedule, and data-v5 adds Haiku's six F2 cells.
 
 ## Start from the Clinic
 
@@ -32,7 +32,7 @@ one thing, and compare with your own baseline.
 | `docs/worked-path.md` | One path through the Clinic and what it exposed. Read it after your own attempt |
 | `docs/adapter-contract.md` | Bringing your own clinician, a vendor's platform included, and declaring its isolation |
 | `scripts/fast_loop.py` | All 1,000 patients at every setting of one dimension in about 12 seconds, with no model. It shows where a change breaks things, not how often |
-| The `data-v2`, `data-v3` and `data-v4` releases | Every recorded cell's conversations, one archive per cell, with a manifest of SHA-256 hashes. data-v3 adds the hosted Jev and Bivia readers' cells to data-v2's, and data-v4 adds Gemma's and Haiku's examples cells on doctor and schedule |
+| The `data-v2` through `data-v5` releases | Every recorded cell's conversations, one archive per cell, with a manifest of SHA-256 hashes. data-v3 adds the hosted Jev and Bivia readers' cells to data-v2's, data-v4 adds Gemma's and Haiku's examples cells on doctor and schedule, and data-v5 adds Haiku's F2 cells |
 
 A bench run here tests a stack against one use case, clinic scheduling. The patients, the scoring
 and the freeze stay fixed, so compare your change with your own baseline run of the reference. The
